@@ -11931,6 +11931,10 @@ def handle_get(handler, parsed) -> bool:
             html = _render_index_shell_base().replace(
                 "__CSRF_TOKEN_JSON__", json.dumps(csrf_token)
             )
+            # Axia client mode: stamp <html data-client-mode> so the front-end
+            # hides the operator surfaces (the server gate is the boundary).
+            from api.client_mode import mark_shell as _mark_client_shell
+            html = _mark_client_shell(html)
             return t(
                 handler,
                 inject_extension_tags(html),
@@ -11938,6 +11942,15 @@ def handle_get(handler, parsed) -> bool:
             )
         except Exception as exc:
             return _serve_shell_unavailable(handler, exc)
+
+    # Axia client mode: the dashboard the agent writes, served read-only and
+    # sandboxed from <HERMES_HOME>/home/dashboard (behind check_auth like any page).
+    if parsed.path == "/dashboard" or parsed.path.startswith("/dashboard/"):
+        from api.client_mode import handle_dashboard_get as _dash_get
+        return _dash_get(handler, parsed)
+    if parsed.path == "/api/client-dashboard":
+        from api.client_mode import handle_dashboard_list as _dash_list
+        return _dash_list(handler)
 
     if parsed.path == "/share" or parsed.path.startswith("/share/"):
         share_path = (Path(__file__).parent.parent / "static" / "share.html").resolve()
@@ -12340,6 +12353,8 @@ def handle_get(handler, parsed) -> bool:
 
     if parsed.path == "/api/settings":
         settings = load_settings()
+        from api.client_mode import is_client_mode as _is_client_mode
+        settings["client_mode"] = _is_client_mode()
         settings["persisted_speech_keys"] = persisted_speech_settings_keys()
         # Never expose the stored password hash to clients
         settings.pop("password_hash", None)

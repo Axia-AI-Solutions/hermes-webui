@@ -1,0 +1,38 @@
+/* Axia client mode — the COSMETIC layer. The boundary is the server gate in
+   api/client_mode.py; nothing hidden here is reachable by a client anyway.
+   Everything keys on <html data-client-mode="1">, stamped by the server. */
+
+/* client-only elements (Dashboard tab, its panel, its main view) exist in the
+   markup for every box and are removed from layout unless client mode is on. */
+html:not([data-client-mode]) .client-only{display:none !important;}
+
+/* client mode: only Chat and Dashboard survive in the rail and the mobile nav */
+html[data-client-mode] .nav-tab[data-panel]:not([data-panel="chat"]):not([data-panel="clientdash"]){display:none !important;}
+html[data-client-mode] .dashboard-link,
+html[data-client-mode] [data-dashboard-link]{display:none !important;}
+
+/* composer: no model / profile / workspace / reasoning pickers, no saved prompts
+   (its API family is denied), no update banner. Attach, mic, files and send stay. */
+html[data-client-mode] #composerModelChip,
+html[data-client-mode] #composerModelDropdown,
+html[data-client-mode] #composerToolsetsWrap,
+html[data-client-mode] #composerToolsetsDropdown,
+html[data-client-mode] #profileChipWrap,
+html[data-client-mode] #composerWorkspaceChip,
+html[data-client-mode] #composerReasoningWrap,
+html[data-client-mode] #btnSavedPrompts,
+html[data-client-mode] #updateBanner{display:none !important;}
+
+/* Dashboard main view (mirrors how style.css switches main views) */
+#mainClientdash{display:none;}
+main.main.showing-clientdash > #mainChat{display:none !important;}
+main.main.showing-clientdash > #mainClientdash{display:flex;}
+#mainClientdash .main-view-body{flex:1;min-height:0;display:flex;flex-direction:column;padding:0;}
+#clientdashFrame{flex:1;width:100%;min-height:0;border:0;background:#fff;}
+
+/* week list in the sidebar panel */
+.clientdash-item{display:block;width:100%;text-align:left;padding:8px 10px;margin:0 0 4px;border:1px solid var(--border2);border-radius:8px;background:var(--code-bg);color:var(--text);font-size:13px;cursor:pointer;}
+.clientdash-item:hover{border-color:var(--accent,var(--border));}
+.clientdash-item.active{border-color:var(--accent,var(--text));font-weight:600;}
+.clientdash-item .clientdash-meta{display:block;font-size:11px;color:var(--muted);margin-top:2px;}
+.clientdash-empty{color:var(--muted);font-size:12px;padding:8px 4px;line-height:1.5;}

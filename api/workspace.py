@@ -825,6 +825,13 @@ def resolve_trusted_workspace(path: str | Path | None = None) -> Path:
 
     candidate = _resolve_path(path)
 
+    # Axia client mode: every session lives in the agent's home. A client-
+    # supplied workspace outside it is coerced back (there is no second
+    # workspace to choose), which is what keeps the file routes anchored.
+    from api.client_mode import is_client_mode as _is_client_mode, pin_workspace as _pin
+    if _is_client_mode():
+        candidate = _pin(candidate, _resolve_path(_BOOT_DEFAULT_WORKSPACE))
+
     access_error = _workspace_access_error(candidate)
     remote_candidate = _remote_terminal_workspace_candidate(path)
     if access_error:

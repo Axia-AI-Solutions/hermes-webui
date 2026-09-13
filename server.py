@@ -101,6 +101,7 @@ from urllib.parse import urlparse
 logger = logging.getLogger(__name__)
 
 from api.auth import check_auth, reset_trusted_auth_request_state
+from api.client_mode import gate as client_mode_gate
 from api.config import HOST, PORT, STATE_DIR, SESSION_DIR, DEFAULT_WORKSPACE
 from api.helpers import (
     j,
@@ -380,6 +381,8 @@ class Handler(BaseHTTPRequestHandler):
         try:
             parsed = urlparse(self.path)
             if not check_auth(self, parsed): return
+            # Axia client mode: refuse non-allowlisted /api families before any route runs.
+            if not client_mode_gate(self, parsed): return
             result = handle_get(self, parsed)
             if result is False:
                 return j(self, {'error': 'not found'}, status=404)
@@ -408,6 +411,7 @@ class Handler(BaseHTTPRequestHandler):
                 parsed.path == "/api/csp-report" and self.command == "POST"
             )
             if not _is_csp_report_post and not check_auth(self, parsed): return
+            if not client_mode_gate(self, parsed): return
             result = route_func(self, parsed)
             if result is False:
                 return j(self, {'error': 'not found'}, status=404)

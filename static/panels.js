@@ -44,7 +44,7 @@ const APP_TITLEBAR_KEYS = {
   memory: 'tab_memory', workspaces: 'tab_workspaces',
   profiles: 'tab_profiles', todos: 'tab_todos', insights: 'tab_insights', logs: 'tab_logs', settings: 'tab_settings',
 };
-const MAIN_VIEW_PANELS = ['settings','skills','memory','tasks','kanban','workspaces','profiles','insights','logs','plugin'];
+const MAIN_VIEW_PANELS = ['settings','skills','memory','tasks','kanban','workspaces','profiles','insights','logs','plugin','clientdash'];
 const MAIN_VIEW_SIDEBAR_PANEL_FALLBACKS = { plugin: 'settings' };
 
 /**
@@ -69,6 +69,7 @@ function syncAppTitlebar() {
   } else {
     const key = APP_TITLEBAR_KEYS[panel];
     mainText = key && typeof t === 'function' ? t(key) : (panel.charAt(0).toUpperCase() + panel.slice(1));
+    if (panel === 'clientdash') mainText = 'Dashboard'; // Axia client mode tab (no i18n key)
   }
 
   // Don't touch the element while an inline rename is in progress — replacing
@@ -366,6 +367,9 @@ function _syncMobileSidebarPanelFromMainView(){
 
 async function switchPanel(name, opts = {}) {
   const nextPanel = name || 'chat';
+  // Axia client mode: every programmatic path (shortcuts, deep links, buttons
+  // the CSS did not hide) is refused here, not only in the rail.
+  if (typeof _CLIENT_MODE !== 'undefined' && _CLIENT_MODE && !_ALWAYS_VISIBLE_TABS.has(nextPanel)) return false;
   const prevPanel = _currentPanel;
   // ── Desktop sidebar collapse toggle (rail-click only) ──
   // If the click came from a rail icon AND we're on desktop, the rail icon
@@ -421,6 +425,7 @@ async function switchPanel(name, opts = {}) {
   if (nextPanel === 'todos') loadTodos();
   if (nextPanel === 'insights') await loadInsights();
   if (nextPanel === 'logs') await loadLogs();
+  if (nextPanel === 'clientdash' && typeof loadClientDashboard === 'function') await loadClientDashboard();
   _syncLogsAutoRefresh();
   if (typeof _syncSystemHealthMonitorVisibility === 'function') _syncSystemHealthMonitorVisibility();
   if (nextPanel === 'settings') {
@@ -7477,7 +7482,11 @@ let _settingsPreferencesAutosaveTimer = null;
 let _settingsPreferencesAutosaveRetryPayload = null;
 
 // ── Sidebar tab visibility/order ────────────────────────────────────────────
-const _ALWAYS_VISIBLE_TABS = new Set(['chat','settings']);
+// Axia client mode (<html data-client-mode>, stamped by the server): the only
+// tabs are Chat and Dashboard, and Settings is NOT always-visible. The server
+// gate in api/client_mode.py is the boundary; this is what the eye sees.
+const _CLIENT_MODE = !!(document.documentElement && document.documentElement.hasAttribute('data-client-mode'));
+const _ALWAYS_VISIBLE_TABS = new Set(_CLIENT_MODE ? ['chat','clientdash'] : ['chat','settings']);
 const _HIDDEN_TABS_LS_KEY = 'hermes-webui-hidden-tabs';
 const _TAB_ORDER_LS_KEY = 'hermes-webui-tab-order';
 const _COMPOSER_CONTROL_ORDER_LS_KEY = 'hermes-webui-composer-control-order';
