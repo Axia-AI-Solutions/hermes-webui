@@ -33,6 +33,10 @@ html[data-client-mode] .session-source-tabs,
 html[data-client-mode] .project-bar,
 html[data-client-mode] .msg-question-jump-btn,
 html[data-client-mode] .suggestion-grid{display:none !important;}
+/* the workspace file-panel edge toggle sits exactly where the agent drawer's
+   tab lives (right edge, mid-height) — measured overlapping it. The composer's
+   folder button still opens the panel for whoever wants it. */
+html[data-client-mode] #btnWorkspacePanelEdgeToggle{display:none !important;}
 
 /* ── Dashboard view ─────────────────────────────────────────────────────── */
 #mainClientdash{display:none;}
