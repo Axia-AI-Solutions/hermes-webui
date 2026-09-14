@@ -301,17 +301,9 @@
       <div class="panel-head-sub" data-i18n="workspace_desc">Add and switch workspaces for your sessions.</div>
       <div style="flex:1;overflow-y:auto;padding:8px" id="workspacesPanel"><div style="color:var(--muted);font-size:12px" data-i18n="loading">Loading...</div></div>
     </div>
-    <!-- Axia client mode: Dashboard panel (client-only; see api/client_mode.py) -->
-    <div class="panel-view client-only" id="panelClientdash">
-      <div class="panel-head">
-        <span>Dashboard</span>
-        <div class="panel-head-actions">
-          <button class="panel-head-btn has-tooltip has-tooltip--bottom" onclick="loadClientDashboard(true)" data-tooltip="Refresh" aria-label="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
-        </div>
-      </div>
-      <div class="panel-head-sub">Weekly dashboards written by your agent, newest first.</div>
-      <div style="flex:1;overflow-y:auto;padding:8px" id="clientdashList"><div class="clientdash-empty">Loading...</div></div>
-    </div>
+    <!-- Axia client mode: the Dashboard view has NO sidebar panel — week navigation
+         lives in the view's own header (#clientdashWeek) and the sidebar is hidden
+         while the view is active (client-mode.css). -->
     <!-- Profiles panel -->
     <div class="panel-view" id="panelProfiles">
       <div class="panel-head">
@@ -947,8 +939,15 @@
     </div>
     <!-- Axia client mode: Dashboard main view (client-only) -->
     <div id="mainClientdash" class="main-view client-only">
-      <div class="main-view-header">
+      <div class="main-view-header clientdash-header">
         <div class="main-view-title" id="clientdashTitle">Dashboard</div>
+        <!-- Week navigation: the dated pages the agent published, newest first.
+             Filled by client-mode.js from api/client-dashboard. -->
+        <div class="clientdash-weeknav" role="group" aria-label="Week">
+          <button type="button" class="clientdash-weekbtn" id="clientdashPrev" aria-label="Previous week" title="Previous week"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <select id="clientdashWeek" class="clientdash-weekselect" aria-label="Choose a week"></select>
+          <button type="button" class="clientdash-weekbtn" id="clientdashNext" aria-label="Next week" title="Next week"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
         <div class="main-view-actions">
           <a id="clientdashOpen" class="panel-head-btn has-tooltip has-tooltip--bottom" data-tooltip="Open in a new tab" aria-label="Open in a new tab" href="dashboard/latest.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
         </div>
@@ -1683,6 +1682,29 @@
       </div>
     </div>
   </main>
+  <!-- Axia client mode: the agent drawer on the Dashboard view. It never renders a
+       chat of its own — #mainChat is MOVED into #agentDrawerBody while the drawer is
+       open on the dashboard and moved back into <main> otherwise (client-mode.js). -->
+  <aside id="agentDrawer" class="client-only" data-state="closed" aria-label="Agent">
+    <button type="button" class="agent-drawer-tab" id="agentDrawerTab" aria-expanded="false" aria-controls="agentDrawerPanel">
+      <img class="agent-avatar" src="static/favicon.svg" alt="" width="22" height="22">
+      <span class="agent-drawer-tab-name" id="agentDrawerTabName">Agent</span>
+      <span class="agent-drawer-badge" id="agentDrawerBadge" hidden>0</span>
+    </button>
+    <div class="agent-drawer-panel" id="agentDrawerPanel">
+      <header class="agent-drawer-head">
+        <img class="agent-avatar" src="static/favicon.svg" alt="" width="28" height="28">
+        <div class="agent-drawer-title"><span class="agent-drawer-name" id="agentDrawerName">Agent</span><span class="agent-drawer-sub">Ask anything about your marketing</span></div>
+        <div class="agent-drawer-actions">
+          <button type="button" class="agent-drawer-btn" id="agentDrawerNew" title="New conversation" aria-label="New conversation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <button type="button" class="agent-drawer-btn" id="agentDrawerWide" title="Wider" aria-label="Toggle wide mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
+          <button type="button" class="agent-drawer-btn" id="agentDrawerClose" title="Close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+      </header>
+      <nav class="agent-drawer-sessions" id="agentDrawerSessions" aria-label="Recent conversations"></nav>
+      <div class="agent-drawer-body" id="agentDrawerBody"></div>
+    </div>
+  </aside>
   <button class="workspace-panel-edge-toggle has-tooltip has-tooltip--left" id="btnWorkspacePanelEdgeToggle" type="button" onclick="toggleWorkspacePanel(true)" data-tooltip="Show workspace panel" aria-label="Show workspace panel" aria-expanded="false">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
   </button>

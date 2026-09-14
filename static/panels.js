@@ -415,6 +415,8 @@ async function switchPanel(name, opts = {}) {
       mainEl.classList.toggle('showing-' + p, nextPanel === p);
     });
   }
+  // Axia client mode: view sync (sidebar hidden on the dashboard, chat DOM placed).
+  if (_CLIENT_MODE && typeof _clientModeOnPanel === 'function') _clientModeOnPanel(nextPanel);
   // Lazy-load panel data
   if (nextPanel === 'tasks') await loadCrons();
   if (nextPanel === 'kanban') await loadKanban();

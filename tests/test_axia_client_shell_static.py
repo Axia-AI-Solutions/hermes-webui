@@ -1,0 +1,182 @@
+"""Axia fork — the client shell (dashboard home · agent drawer · iframe→shell bridge).
+
+Structural assertions over static/*.js|css|html, the repo's convention for
+front-end behaviour (no node/jsdom dependency — see TESTING.md). Each assertion
+pins a decision from docs/superpowers/specs/2026-09-14-marketing-agent-shell-ux-design.md
+so a rebase or a refactor that silently drops one goes red here.
+"""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parent.parent
+STATIC = REPO / "static"
+
+
+def _read(name: str) -> str:
+    return (STATIC / name).read_text(encoding="utf-8")
+
+
+# ── shell markup ─────────────────────────────────────────────────────────────
+
+def test_dashboard_view_has_no_sidebar_panel_and_a_header_week_nav():
+    html = _read("index.html")
+    assert 'id="panelClientdash"' not in html, "the week list sidebar panel was removed on purpose"
+    assert 'id="clientdashList"' not in html
+    for needle in ('id="clientdashWeek"', 'id="clientdashPrev"', 'id="clientdashNext"', 'id="clientdashFrame"', 'id="clientdashOpen"'):
+        assert needle in html, needle
+
+
+def test_drawer_markup_is_client_only_and_sits_beside_main():
+    html = _read("index.html")
+    m = re.search(r'<aside id="agentDrawer" class="client-only" data-state="closed"', html)
+    assert m, "drawer aside missing or not client-only / not closed by default"
+    assert html.index("</main>") < m.start(), "drawer must be a sibling AFTER <main> (a flex item of .layout)"
+    for needle in ('id="agentDrawerTab"', 'id="agentDrawerBadge"', 'id="agentDrawerName"', 'id="agentDrawerNew"',
+                   'id="agentDrawerWide"', 'id="agentDrawerClose"', 'id="agentDrawerSessions"', 'id="agentDrawerBody"'):
+        assert needle in html, needle
+    # the drawer never carries a transcript or composer of its own
+    body = html[html.index('id="agentDrawerBody"'):html.index("</aside>", html.index('id="agentDrawerBody"'))]
+    assert "composer" not in body and 'id="messages' not in body
+
+
+def test_avatar_is_the_brand_mark_the_box_mounts():
+    html = _read("index.html")
+    assert html.count('class="agent-avatar" src="static/favicon.svg"') >= 2
+
+
+# ── css ──────────────────────────────────────────────────────────────────────
+
+def test_css_hides_sidebar_on_dashboard_and_hides_developer_vocabulary():
+    css = _read("client-mode.css")
+    assert 'html[data-client-mode][data-client-view="dashboard"] .sidebar' in css
+    for cls in (".session-source-tabs", ".project-bar", ".msg-question-jump-btn", ".suggestion-grid"):
+        assert f"html[data-client-mode] {cls}" in css or f",\nhtml[data-client-mode] {cls}" in css, cls
+    assert ".clientdash-item" not in css, "sidebar week-list styles were removed with the panel"
+
+
+def test_css_drawer_states_and_chat_placement():
+    css = _read("client-mode.css")
+    assert '#agentDrawer[data-state="open"]{width:420px' in css
+    assert '#agentDrawer[data-state="wide"]{width:min(60vw,900px)' in css
+    assert 'html[data-client-mode]:not([data-client-view="dashboard"]) #agentDrawer{display:none !important;}' in css
+    assert ".agent-drawer-body > #mainChat{display:flex" in css
+    # the upstream child-combinator rule is what keeps #mainChat hidden on the dashboard
+    # while it lives in <main>; moving it into the drawer escapes that rule by design
+    assert "main.main.showing-clientdash > #mainChat{display:none !important;}" in css
+
+
+# ── upstream hooks (one-liners, all commented "Axia client mode") ────────────
+
+def test_switch_panel_hook():
+    js = _read("panels.js")
+    assert "if (_CLIENT_MODE && typeof _clientModeOnPanel === 'function') _clientModeOnPanel(nextPanel);" in js
+    fn = js[js.index("async function switchPanel("):]
+    fn = fn[:fn.index("\n}\n")]
+    assert "_clientModeOnPanel(nextPanel)" in fn
+    assert fn.index("mainEl.classList.toggle('showing-'") < fn.index("_clientModeOnPanel(nextPanel)")
+
+
+def test_boot_overrides_come_after_the_settings_they_override():
+    js = _read("boot.js")
+    block = ("if(typeof _CLIENT_MODE!=='undefined'&&_CLIENT_MODE){window._showCliSessions=false;"
+             "window._chatActivityDisplayMode='hide_all_activity';window._transparentStream=false;"
+             "window._hideEmptyStateSuggestions=true;}")
+    assert block in js
+    assert js.index("window._showCliSessions=s.show_cli_sessions!==false;") < js.index(block)
+    assert js.index("window._chatActivityDisplayMode=s.chat_activity_display_mode") < js.index(block)
+    assert js.index("window._transparentStream=window._chatActivityDisplayMode==='transparent_stream';") < js.index(block)
+
+
+def test_send_ships_the_pending_dashboard_context_once():
+    js = _read("messages.js")
+    start = js.index("api('/api/chat/start'")
+    body = js[start:js.index("})});", start)]
+    assert "dashboard_context:(S._pendingDashboardContext&&typeof S._pendingDashboardContext==='object')?S._pendingDashboardContext:undefined" in body
+    after = js[start:start + 1500]
+    assert after.count("S._pendingDashboardContext=null;") == 2, "cleared on success AND on failure"
+
+
+# ── client-mode.js: bridge, drawer, weeks, home view ─────────────────────────
+
+def test_bridge_validates_by_window_identity_and_opaque_origin():
+    js = _read("client-mode.js")
+    fn = js[js.index("function acceptDashboardMessage("):js.index("function runDashboardAction(")]
+    assert "ev.source !== frame.contentWindow" in fn
+    assert "ev.origin !== 'null' && ev.origin !== ownOrigin" in fn
+    assert "d.type !== MSG_TYPE" in fn and "var MSG_TYPE = 'axia.dashboard.action';" in js
+    assert "d.v !== 1" in fn
+    assert "prompt.length > PROMPT_MAX" in fn and "var PROMPT_MAX = 4000;" in js
+    assert "var CONTEXT_CAPS = {item_id: 200, title: 200, section: 100};" in js
+    assert "var CONTEXT_KINDS = {finding: 1, action: 1, cta: 1};" in js
+
+
+def test_bridge_action_is_new_session_then_rename_then_send_with_context():
+    js = _read("client-mode.js")
+    fn = js[js.index("async function _runAction("):js.index("function _onWindowMessage(")]
+    order = [
+        "openDrawer()",
+        "await newSession(false, {worktree: false});",
+        "api('/api/session/rename'",
+        "applySessionTitleUpdate(sid, title, {force: true})",
+        "S._pendingDashboardContext = context;",
+        "input.value = prompt;",
+        "await send();",
+    ]
+    idx = [fn.index(step) for step in order]
+    assert idx == sorted(idx), "the bridge sequence must be: open → new session → rename → context → text → send"
+    assert ".slice(0, 64)" in fn, "titles cap at 64 chars"
+    assert "_actionChain = _actionChain.then(" in js, "clicks are serialised, never deduplicated"
+
+
+def test_reverse_channel_is_reserved_not_used():
+    js = _read("client-mode.js")
+    assert "function postToDashboard(msg)" in js
+    assert "frame.contentWindow.postMessage(msg, '*')" in js
+    assert js.count("postToDashboard(") == 1, "the declaration only — no caller yet"
+    assert "window.postToDashboard = postToDashboard;" in js
+
+
+def test_one_chat_dom_moved_between_main_and_drawer():
+    js = _read("client-mode.js")
+    fn = js[js.index("function _placeChat("):js.index("var DRAWER_KEY")]
+    assert "body.appendChild(chat)" in fn
+    assert "main.insertBefore(chat, anchor)" in fn
+    assert "_view() === 'dashboard' && _drawerState !== 'closed'" in fn
+    assert "cloneNode" not in js, "the drawer must never copy the chat"
+
+
+def test_drawer_state_and_seen_set_live_in_local_storage():
+    js = _read("client-mode.js")
+    assert "var DRAWER_KEY = 'axia-agent-drawer';" in js
+    assert "var SEEN_KEY = 'axia-seen-announcements';" in js
+    assert "var ANNOUNCEMENT_TAG = 'dashboard_announcement';" in js
+
+
+def test_dashboard_is_the_home_view_in_client_mode():
+    js = _read("client-mode.js")
+    start = js[js.index("function _start("):]
+    assert "if(!CLIENT) return;" in start
+    assert "switchPanel('clientdash')" in start
+
+
+def test_weeks_are_the_dated_pages_newest_first():
+    js = _read("client-mode.js")
+    assert r"var DATED_RE = /^(\d{4})-(\d{2})-(\d{2})\.html$/i;" in js
+    fn = js[js.index("function deriveWeeks("):js.index("function _weekIndex(")]
+    assert "return a.name < b.name ? 1 : (a.name > b.name ? -1 : 0);" in fn
+    assert "{name: 'latest.html', label: 'This week'}" in fn
+
+
+def test_empty_state_copy_names_the_agent_and_drops_i18n_binding():
+    js = _read("client-mode.js")
+    assert "h.textContent = 'Ask ' + name;" in js
+    assert "h.removeAttribute('data-i18n')" in js and "p.removeAttribute('data-i18n')" in js
+    assert "window._botName" in js
+
+
+def test_client_mode_js_is_registered_after_panels_js():
+    html = _read("index.html")
+    assert html.index('src="static/panels.js') < html.index('src="static/client-mode.js') < html.index('src="static/boot.js')

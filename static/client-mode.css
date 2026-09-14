@@ -1,9 +1,11 @@
 /* Axia client mode — the COSMETIC layer. The boundary is the server gate in
    api/client_mode.py; nothing hidden here is reachable by a client anyway.
-   Everything keys on <html data-client-mode="1">, stamped by the server. */
+   Everything keys on <html data-client-mode="1">, stamped by the server, and on
+   <html data-client-view="dashboard|chat">, set by client-mode.js on every
+   panel switch. */
 
-/* client-only elements (Dashboard tab, its panel, its main view) exist in the
-   markup for every box and are removed from layout unless client mode is on. */
+/* client-only elements (Dashboard tab, its main view, the agent drawer) exist in
+   the markup for every box and are removed from layout unless client mode is on. */
 html:not([data-client-mode]) .client-only{display:none !important;}
 
 /* client mode: only Chat and Dashboard survive in the rail and the mobile nav */
@@ -23,16 +25,86 @@ html[data-client-mode] #composerReasoningWrap,
 html[data-client-mode] #btnSavedPrompts,
 html[data-client-mode] #updateBanner{display:none !important;}
 
-/* Dashboard main view (mirrors how style.css switches main views) */
+/* Developer vocabulary a client must never see: the WebUI/CLI source tabs, the
+   project chips ("All / Unassigned"), the "to response" jump buttons and the
+   workspace-flavoured empty-state suggestions. The labels stay in upstream
+   i18n untouched; only the elements are removed from layout in this mode. */
+html[data-client-mode] .session-source-tabs,
+html[data-client-mode] .project-bar,
+html[data-client-mode] .msg-question-jump-btn,
+html[data-client-mode] .suggestion-grid{display:none !important;}
+
+/* ── Dashboard view ─────────────────────────────────────────────────────── */
 #mainClientdash{display:none;}
 main.main.showing-clientdash > #mainChat{display:none !important;}
 main.main.showing-clientdash > #mainClientdash{display:flex;}
 #mainClientdash .main-view-body{flex:1;min-height:0;display:flex;flex-direction:column;padding:0;}
 #clientdashFrame{flex:1;width:100%;min-height:0;border:0;background:#fff;}
 
-/* week list in the sidebar panel */
-.clientdash-item{display:block;width:100%;text-align:left;padding:8px 10px;margin:0 0 4px;border:1px solid var(--border2);border-radius:8px;background:var(--code-bg);color:var(--text);font-size:13px;cursor:pointer;}
-.clientdash-item:hover{border-color:var(--accent,var(--border));}
-.clientdash-item.active{border-color:var(--accent,var(--text));font-weight:600;}
-.clientdash-item .clientdash-meta{display:block;font-size:11px;color:var(--muted);margin-top:2px;}
-.clientdash-empty{color:var(--muted);font-size:12px;padding:8px 4px;line-height:1.5;}
+/* the dashboard takes the full width: no sidebar while this view is active */
+html[data-client-mode][data-client-view="dashboard"] .sidebar,
+html[data-client-mode][data-client-view="dashboard"] .sidebar .resize-handle{display:none !important;}
+
+/* header: title · week navigation · actions */
+.clientdash-header{gap:12px;}
+.clientdash-weeknav{display:flex;align-items:center;gap:4px;margin-left:8px;min-width:0;}
+.clientdash-weekbtn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--surface,var(--code-bg));color:var(--text);cursor:pointer;padding:0;}
+.clientdash-weekbtn:hover:not(:disabled){border-color:var(--accent,var(--border2));}
+.clientdash-weekbtn:disabled{opacity:.35;cursor:default;}
+.clientdash-weekselect{height:28px;max-width:260px;min-width:0;border:1px solid var(--border);border-radius:6px;background:var(--surface,var(--code-bg));color:var(--text);font:inherit;font-size:13px;padding:0 8px;cursor:pointer;}
+.clientdash-weekselect:focus{outline:2px solid var(--accent,var(--border2));outline-offset:1px;}
+
+/* ── Agent drawer ───────────────────────────────────────────────────────── */
+/* A flex sibling of <main> inside .layout. Three states on data-state:
+   closed (only the edge tab shows) · open (420px) · wide (min(60vw, 900px)).
+   Hidden entirely outside the Dashboard view — the Chat view IS the chat. */
+html[data-client-mode]:not([data-client-view="dashboard"]) #agentDrawer{display:none !important;}
+#agentDrawer{position:relative;flex:0 0 auto;width:0;min-width:0;display:flex;flex-direction:column;background:var(--bg);border-left:0 solid var(--border);transition:width .18s ease;}
+#agentDrawer[data-state="open"]{width:420px;border-left-width:1px;}
+#agentDrawer[data-state="wide"]{width:min(60vw,900px);border-left-width:1px;}
+#agentDrawer .agent-drawer-panel{display:none;flex:1;min-height:0;flex-direction:column;}
+#agentDrawer[data-state="open"] .agent-drawer-panel,
+#agentDrawer[data-state="wide"] .agent-drawer-panel{display:flex;}
+
+/* edge tab: the collapsed drawer. Vertical, on the right edge, with the agent's
+   avatar, name and an unread badge. */
+.agent-drawer-tab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:40;display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 6px 12px 7px;border:1px solid var(--border);border-right:0;border-radius:10px 0 0 10px;background:var(--sidebar);color:var(--text);cursor:pointer;box-shadow:-2px 0 8px rgba(0,0,0,.06);}
+.agent-drawer-tab:hover{background:var(--surface,var(--code-bg));}
+#agentDrawer[data-state="open"] .agent-drawer-tab,
+#agentDrawer[data-state="wide"] .agent-drawer-tab{display:none;}
+.agent-drawer-tab-name{writing-mode:vertical-rl;transform:rotate(180deg);font-size:12px;font-weight:600;letter-spacing:.02em;white-space:nowrap;max-height:160px;overflow:hidden;text-overflow:ellipsis;}
+.agent-drawer-badge{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent,#B8860B);color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center;}
+.agent-avatar{width:22px;height:22px;border-radius:6px;object-fit:contain;flex-shrink:0;}
+
+/* header inside the open drawer */
+.agent-drawer-head{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);background:var(--sidebar);}
+.agent-drawer-head .agent-avatar{width:28px;height:28px;border-radius:8px;}
+.agent-drawer-title{display:flex;flex-direction:column;min-width:0;flex:1;}
+.agent-drawer-name{font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.agent-drawer-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.agent-drawer-actions{display:flex;align-items:center;gap:2px;flex-shrink:0;}
+.agent-drawer-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:var(--muted);cursor:pointer;padding:0;}
+.agent-drawer-btn:hover{background:var(--surface,var(--code-bg));color:var(--text);}
+
+/* compact switcher: the most recent conversations, same rows as the sidebar */
+.agent-drawer-sessions{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;border-bottom:1px solid var(--border);scrollbar-width:thin;}
+.agent-drawer-sessions:empty{display:none;}
+.agent-drawer-session{position:relative;flex:0 0 auto;max-width:180px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface,var(--code-bg));color:var(--text);cursor:pointer;text-align:left;font:inherit;}
+.agent-drawer-session:hover{border-color:var(--accent,var(--border2));}
+.agent-drawer-session.active{border-color:var(--accent,var(--text));background:var(--bg);}
+.agent-drawer-session .t{font-size:12px;font-weight:500;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.agent-drawer-session .m{font-size:10px;color:var(--muted);}
+.agent-drawer-session.unread::after{content:'';position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--accent,#B8860B);}
+
+/* the body receives #mainChat (moved, not copied) */
+.agent-drawer-body{flex:1;min-height:0;display:flex;flex-direction:column;}
+.agent-drawer-body > #mainChat{display:flex;flex:1;min-height:0;}
+
+/* mobile: the open drawer covers the screen; the tab becomes a pill */
+@media (max-width:640px){
+  #agentDrawer[data-state="open"],
+  #agentDrawer[data-state="wide"]{position:fixed;inset:0;width:auto;z-index:60;border-left:0;}
+  .agent-drawer-tab{top:auto;bottom:18px;right:12px;transform:none;flex-direction:row;padding:8px 12px;border-radius:999px;border-right:1px solid var(--border);}
+  .agent-drawer-tab-name{writing-mode:horizontal-tb;transform:none;max-height:none;}
+  .clientdash-weekselect{max-width:150px;}
+}
