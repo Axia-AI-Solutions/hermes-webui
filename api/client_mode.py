@@ -26,9 +26,11 @@ route added after a rebase cannot leak into client mode silently.
 from __future__ import annotations
 
 import html as _html
+import json
 import mimetypes
 import os
 import re
+from datetime import date as _date
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -373,7 +375,147 @@ def handle_dashboard_list(handler, root: Path | None = None) -> bool:
     from api.helpers import j
 
     root = root or dashboard_dir()
+    if is_client_mode():
+        # A newly published dashboard is announced by the agent in a new
+        # conversation. Fail-soft: the listing must never break because of it.
+        try:
+            maybe_announce(root, _create_announcement_session, bot_name=_bot_name())
+        except Exception:  # pragma: no cover - defensive; the helper already isolates I/O
+            pass
     return j(handler, {"pages": list_dashboard_pages(root), "dir": str(root)}) or True
+
+
+# ── Weekly announcement ───────────────────────────────────────────────────────
+#
+# When the skill publishes a new `latest.html`, the agent should tell the client
+# in a new conversation what needs their attention, and the drawer badge should
+# show it until read. The hermes container has no authenticated path into this
+# sidecar (auth is an OIDC cookie), and a cron-origin hermes session would be
+# read-only here, so the SIDECAR creates the session, composing the message from
+# the `dashboard.json` the skill publishes beside the page. The trigger is the
+# dashboard listing (called on every Dashboard open); the marker is a dotfile,
+# which the dashboard route never serves (`_SAFE_SEGMENT` refuses a leading dot).
+
+_MARKER_NAME = ".announced.json"
+
+
+def _bot_name() -> str:
+    try:
+        from api.config import load_settings
+
+        return str(load_settings().get("bot_name") or "").strip() or "your agent"
+    except Exception:
+        return "your agent"
+
+
+def _create_announcement_session(title: str, text: str) -> str:
+    """Indirection so the routes-side creator is resolved lazily (and patchable)."""
+    from api.routes import _create_announcement_session as _impl
+
+    return _impl(title, text)
+
+
+def latest_dashboard_state(root: Path) -> dict | None:
+    p = root / "latest.html"
+    if not p.is_file():
+        return None
+    st = p.stat()
+    return {"mtime": int(st.st_mtime), "size": int(st.st_size)}
+
+
+def read_announcement_marker(root: Path) -> dict | None:
+    p = root / _MARKER_NAME
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def write_announcement_marker(root: Path, state: dict) -> None:
+    p = root / _MARKER_NAME
+    tmp = root / (_MARKER_NAME + ".tmp")
+    tmp.write_text(json.dumps(state), encoding="utf-8")
+    os.replace(tmp, p)
+
+
+def _week_label(week_start) -> str | None:
+    """'2026-09-07' -> 'Sep 7'; None when the value is not an ISO date."""
+    if not isinstance(week_start, str) or not _WEEK_RE.match(week_start):
+        return None
+    try:
+        y, m, d = (int(x) for x in week_start.split("-"))
+        dt = _date(y, m, d)
+    except ValueError:
+        return None
+    return f"{dt:%b} {dt.day}"
+
+
+def compose_announcement(dashboard_json, bot_name: str) -> tuple[str, str]:
+    """(title, text) for the announcement session, from the skill's dashboard.json.
+
+    Written in the agent's first person. With no readable JSON the message is
+    generic rather than absent: the client still learns there is a new page.
+    """
+    data = dashboard_json if isinstance(dashboard_json, dict) else {}
+    week = _week_label(data.get("week_start"))
+    findings = []
+    overview = data.get("overview")
+    if isinstance(overview, dict) and isinstance(overview.get("findings"), list):
+        for f in overview["findings"]:
+            if isinstance(f, dict) and isinstance(f.get("headline"), str) and f["headline"].strip():
+                findings.append(f)
+    findings.sort(key=lambda f: (f.get("rank") if isinstance(f.get("rank"), int) else 999))
+    title = f"Week of {week} dashboard" if week else "This week's dashboard"
+    when = f"the week of {week}" if week else "this week"
+    if not findings:
+        text = (f"Your dashboard for {when} is ready. Open the Dashboard tab to read it, "
+                "or ask me here about anything in it.")
+        return title, text
+    needs = [f for f in findings if f.get("action_tag") == "needs_you"]
+    others = [f for f in findings if f.get("action_tag") != "needs_you"]
+    n = len(findings)
+    changed = "1 thing changed" if n == 1 else f"{n} things changed"
+    lines = []
+    if needs:
+        if n == 1:
+            lines.append(f"Your dashboard for {when} is ready. {changed}, and it needs you:")
+        else:
+            m = len(needs)
+            lines.append(f"Your dashboard for {when} is ready. {changed}, {m} need{'s' if m == 1 else ''} you:")
+        lines.extend(f"• {f['headline'].strip()}" for f in needs)
+        if others:
+            lines.append("Also worth a look: " + "; ".join(f["headline"].strip() for f in others[:3]) + ".")
+    else:
+        lines.append(f"Your dashboard for {when} is ready. {changed} and none needs you this week:")
+        lines.extend(f"• {f['headline'].strip()}" for f in findings[:4])
+    lines.append("Open the Dashboard tab to read it, or ask me here about any of these.")
+    return title, "\n".join(lines)
+
+
+def maybe_announce(root: Path, create_session, bot_name: str = "your agent") -> bool:
+    """Announce a new latest.html exactly once; True when a session was created.
+
+    The marker is written only AFTER the creator succeeded, so a failed create is
+    retried on the next listing instead of being lost.
+    """
+    state = latest_dashboard_state(root)
+    if state is None:
+        return False
+    if read_announcement_marker(root) == state:
+        return False
+    dashboard_json = None
+    try:
+        dashboard_json = json.loads((root / "dashboard.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        dashboard_json = None
+    title, text = compose_announcement(dashboard_json, bot_name)
+    try:
+        create_session(title, text)
+    except Exception:
+        return False
+    write_announcement_marker(root, state)
+    return True
 
 
 # ── Shell marker ──────────────────────────────────────────────────────────────

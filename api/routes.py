@@ -25686,6 +25686,34 @@ def _handle_session_import(handler, body):
     return j(handler, {"ok": True, "session": s.compact() | {"messages": s.messages}})
 
 
+def _create_announcement_session(title: str, text: str) -> str:
+    """Axia client mode: one new WebUI session holding one assistant message.
+
+    Used by api/client_mode.maybe_announce when the skill publishes a new weekly
+    dashboard. It is a normal, writable WebUI session (`session_source` webui, so
+    opening it never triggers a CLI import), tagged `dashboard_announcement` so
+    the client shell can badge it until read; `manual_title` keeps the LLM
+    auto-title from renaming it. Returns the new session id.
+    """
+    s = Session(
+        title=title,
+        workspace=str(DEFAULT_WORKSPACE),
+        model=DEFAULT_MODEL,
+        messages=[{"role": "assistant", "content": text, "timestamp": time.time()}],
+        profile=get_active_profile_name(),
+    )
+    s.session_source = "webui"
+    s.source_tag = "dashboard_announcement"
+    s.manual_title = True
+    with LOCK:
+        SESSIONS[s.session_id] = s
+        SESSIONS.move_to_end(s.session_id)
+        _evict_sessions_over_cap()
+    s.save()
+    publish_session_list_changed("dashboard_announcement")
+    return s.session_id
+
+
 # ── MCP Server helpers ──
 from api.config import get_config, _save_yaml_config_file, _get_config_path, reload_config
 

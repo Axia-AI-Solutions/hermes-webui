@@ -385,3 +385,118 @@ def test_surface_prompt_renders_the_item_line_only_when_present():
     with_ctx = _webui_surface_context_prompt(dict(base, dashboard_context={"title": "2-star review", "kind": "finding"}))
     assert with_ctx.startswith(without)
     assert '- Dashboard item: this conversation was started from the weekly marketing dashboard, item "2-star review", finding.' in with_ctx
+
+
+# ── the weekly announcement: a new dashboard = one new conversation ──────────
+
+import json as _json
+
+_DASH_JSON = {
+    "week_start": "2026-09-07", "school": "University of the Potomac", "prepared_for": "Brandi",
+    "overview": {"findings": [
+        {"rank": 1, "headline": "A 2-star Google review is unanswered", "action_tag": "needs_you"},
+        {"rank": 2, "headline": "Reddit thread on CPT went quiet", "action_tag": "watch"},
+        {"rank": 3, "headline": "AI visibility fell 1.4 points", "action_tag": "needs_you"},
+        {"rank": 4, "headline": "Brand search stayed clean", "action_tag": "watch"},
+    ]},
+}
+
+
+class _Creator:
+    def __init__(self, fail=False):
+        self.calls = []
+        self.fail = fail
+
+    def __call__(self, title, text):
+        if self.fail:
+            raise RuntimeError("boom")
+        self.calls.append((title, text))
+        return "sid-" + str(len(self.calls))
+
+
+def test_announce_nothing_without_a_dashboard(tmp_path):
+    root = tmp_path / "dashboard"
+    root.mkdir()
+    c = _Creator()
+    assert cm.maybe_announce(root, c) is False
+    assert c.calls == []
+    assert not (root / ".announced.json").exists()
+
+
+def test_announce_once_per_published_dashboard(dash):
+    (dash / "dashboard.json").write_text(_json.dumps(_DASH_JSON), encoding="utf-8")
+    c = _Creator()
+    assert cm.maybe_announce(dash, c, bot_name="Marketing Agent") is True
+    assert len(c.calls) == 1
+    title, text = c.calls[0]
+    assert title == "Week of Sep 7 dashboard"
+    assert "2 need you" in text
+    assert "A 2-star Google review is unanswered" in text
+    assert "AI visibility fell 1.4 points" in text
+    assert "Reddit thread on CPT went quiet" in text  # the watch items are "also worth a look"
+    assert "Open the Dashboard tab" in text
+    # same file → no second announcement
+    assert cm.maybe_announce(dash, c) is False
+    assert len(c.calls) == 1
+    # a re-publish (different bytes) → announced again
+    (dash / "latest.html").write_text("<h1>this week, republished</h1>", encoding="utf-8")
+    assert cm.maybe_announce(dash, c) is True
+    assert len(c.calls) == 2
+
+
+def test_announce_marker_is_a_dotfile_the_dashboard_route_never_serves(dash):
+    (dash / "dashboard.json").write_text(_json.dumps(_DASH_JSON), encoding="utf-8")
+    cm.maybe_announce(dash, _Creator())
+    marker = dash / ".announced.json"
+    assert marker.exists()
+    assert cm.resolve_dashboard_file(".announced.json", dash) is None
+    assert all(p["name"] != ".announced.json" for p in cm.list_dashboard_pages(dash))
+
+
+def test_announce_retries_when_the_session_could_not_be_created(dash):
+    (dash / "dashboard.json").write_text(_json.dumps(_DASH_JSON), encoding="utf-8")
+    assert cm.maybe_announce(dash, _Creator(fail=True)) is False
+    assert not (dash / ".announced.json").exists()
+    ok = _Creator()
+    assert cm.maybe_announce(dash, ok) is True and len(ok.calls) == 1
+
+
+def test_compose_announcement_variants():
+    title, text = cm.compose_announcement(_DASH_JSON, "Marketing Agent")
+    assert title == "Week of Sep 7 dashboard" and "4 things changed" in text
+    none_needed = dict(_DASH_JSON, overview={"findings": [dict(f, action_tag="watch") for f in _DASH_JSON["overview"]["findings"]]})
+    _, text2 = cm.compose_announcement(none_needed, "Marketing Agent")
+    assert "none needs you" in text2
+    one = dict(_DASH_JSON, overview={"findings": _DASH_JSON["overview"]["findings"][:1]})
+    _, text3 = cm.compose_announcement(one, "Marketing Agent")
+    assert "1 thing changed" in text3 and "it needs you" in text3
+    title4, text4 = cm.compose_announcement(None, "Marketing Agent")
+    assert title4 == "This week's dashboard" and "ready" in text4.lower()
+
+
+def test_announce_with_unreadable_json_still_announces_generically(dash):
+    (dash / "dashboard.json").write_text("{not json", encoding="utf-8")
+    c = _Creator()
+    assert cm.maybe_announce(dash, c) is True
+    assert c.calls[0][0] == "This week's dashboard"
+
+
+def test_listing_triggers_the_announcement_only_in_client_mode(dash, monkeypatch):
+    (dash / "dashboard.json").write_text(_json.dumps(_DASH_JSON), encoding="utf-8")
+    seen = []
+    monkeypatch.setattr(cm, "_create_announcement_session", lambda title, text: seen.append(title) or "sid")
+    monkeypatch.delenv("HERMES_WEBUI_CLIENT_MODE", raising=False)
+    cm.handle_dashboard_list(FakeHandler("GET"), dash)
+    assert seen == []
+    monkeypatch.setenv("HERMES_WEBUI_CLIENT_MODE", "1")
+    cm.handle_dashboard_list(FakeHandler("GET"), dash)
+    assert seen == ["Week of Sep 7 dashboard"]
+
+
+def test_announcement_session_is_a_writable_webui_session_tagged_for_the_badge():
+    src = (REPO / "api" / "routes.py").read_text(encoding="utf-8")
+    start = src.index("def _create_announcement_session(")
+    block = src[start:src.index("\ndef ", start + 1)]
+    for needle in ('session_source = "webui"', 'source_tag = "dashboard_announcement"', "manual_title = True",
+                   '"role": "assistant"', "publish_session_list_changed("):
+        assert needle in block, needle
