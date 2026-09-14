@@ -341,3 +341,47 @@ def test_dashboard_context_prompt_line_names_the_item():
         assert needle in line
     assert cm.dashboard_context_prompt_line(None) == ""
     assert cm.dashboard_context_prompt_line({}) == ""
+
+
+# ── dashboard_context travels: persisted on the session, injected per turn ───
+
+def test_dashboard_context_is_a_persisted_session_field():
+    src = (REPO / "api" / "models.py").read_text(encoding="utf-8")
+    meta_block = src[src.index("METADATA_FIELDS = ["):src.index("]", src.index("METADATA_FIELDS = ["))]
+    assert "'dashboard_context'" in meta_block
+    compact_block = src[src.index("def compact(self"):src.index("def compact(self") + 6000]
+    assert "'dashboard_context'" in compact_block
+    assert "self.dashboard_context = " in src
+
+
+def test_chat_start_reads_the_context_through_the_normaliser_and_sets_it_once():
+    src = (REPO / "api" / "routes.py").read_text(encoding="utf-8")
+    # Both the read and the assignment must live in the HANDLER, where `body` and `s`
+    # are in scope — the first cut put the assignment in _start_chat_stream_for_session,
+    # three call layers down, where the name did not exist (a NameError only at runtime).
+    start = src.index("def _handle_chat_start(")
+    end = src.index("\ndef ", start + 1)
+    handler = src[start:end]
+    assert 'normalize_dashboard_context(body.get("dashboard_context"))' in handler
+    # first turn wins: a later turn of the same session must not overwrite it
+    assert 'if dashboard_context and not getattr(s, "dashboard_context", None):' in handler
+    assert "s.dashboard_context = dashboard_context" in handler
+    assert handler.index('normalize_dashboard_context(body.get(') < handler.index("s.dashboard_context = dashboard_context")
+    # and nowhere else in the file
+    assert src.count("s.dashboard_context = dashboard_context") == 1
+
+
+def test_both_turn_paths_hand_the_context_to_the_surface_prompt():
+    for name in ("gateway_chat.py", "streaming.py"):
+        src = (REPO / "api" / name).read_text(encoding="utf-8")
+        assert "'dashboard_context'" in src or '"dashboard_context"' in src, name
+
+
+def test_surface_prompt_renders_the_item_line_only_when_present():
+    from api.streaming import _webui_surface_context_prompt
+    base = {"source": "webui", "session_id": "abc", "profile": "default", "workspace": "/opt/data/home"}
+    without = _webui_surface_context_prompt(dict(base))
+    assert "Dashboard item" not in without
+    with_ctx = _webui_surface_context_prompt(dict(base, dashboard_context={"title": "2-star review", "kind": "finding"}))
+    assert with_ctx.startswith(without)
+    assert '- Dashboard item: this conversation was started from the weekly marketing dashboard, item "2-star review", finding.' in with_ctx

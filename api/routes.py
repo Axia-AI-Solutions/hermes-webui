@@ -21972,6 +21972,13 @@ def _handle_chat_start(handler, body, diag=None):
         msg = str(body.get("message", "")).strip()
         if not msg:
             return bad(handler, "message is required")
+        # Axia client mode: structured context from a dashboard button (fail-soft: a bad
+        # context is dropped, never a 400 — the message still goes through).
+        from api.client_mode import normalize_dashboard_context as _normalize_dashboard_context
+        dashboard_context = _normalize_dashboard_context(body.get("dashboard_context"))
+        if dashboard_context and not getattr(s, "dashboard_context", None):
+            # First turn wins; the pending-state save below persists it with the turn.
+            s.dashboard_context = dashboard_context
         diag.stage("normalize_attachments") if diag else None
         attachments = _normalize_chat_attachments(body.get("attachments") or [])[:20]
         recovery = compression_recovery_payload_for_session(s)

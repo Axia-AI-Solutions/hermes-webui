@@ -719,6 +719,11 @@ def _webui_surface_context_prompt(surface_context: Optional[dict]) -> str:
         value = str(raw).strip() if raw is not None else ""
         if value:
             lines.append(f"- {label}: {value}")
+    # Axia client mode: the dashboard item the conversation was started from.
+    from api.client_mode import dashboard_context_prompt_line as _dashboard_context_prompt_line
+    _dc_line = _dashboard_context_prompt_line(surface_context.get("dashboard_context"))
+    if _dc_line:
+        lines.append(_dc_line)
     return "\n".join(lines)
 
 
@@ -8572,6 +8577,7 @@ def _run_agent_streaming(
                     'session_id': session_id,
                     'profile': getattr(s, 'profile', None),
                     'workspace': s.workspace,
+                    'dashboard_context': getattr(s, 'dashboard_context', None),  # Axia client mode
                 },
                 config_data=_cfg,
             )

@@ -746,6 +746,7 @@ def _run_gateway_chat_streaming(
                     "session_id": session_id,
                     "profile": getattr(s, "profile", None),
                     "workspace": s.workspace if s is not None else str(workspace),
+                    "dashboard_context": getattr(s, "dashboard_context", None),  # Axia client mode
                 },
                 config_data=cfg,
             )

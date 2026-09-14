@@ -1250,6 +1250,10 @@ class Session:
         # so a stale first-party leftover (#433) is never wrongly preserved.
         # Restored from persisted metadata on load (arrives via **kwargs).
         self.model_explicit_pick_signature = kwargs.get('model_explicit_pick_signature') or None
+        # Axia client mode: the dashboard item this conversation was started from
+        # (see api/client_mode.normalize_dashboard_context). First turn sets it.
+        _dc = kwargs.get('dashboard_context')
+        self.dashboard_context = _dc if isinstance(_dc, dict) and _dc else None
         self.messages = messages or []
         self.tool_calls = tool_calls or []
         self.created_at = created_at or time.time()
@@ -1393,6 +1397,7 @@ class Session:
             'enabled_toolsets', 'composer_draft',
             'process_wakeup_pause',
             'share_token', 'share_created_at',
+            'dashboard_context',
         ]
         meta = {k: getattr(self, k, None) for k in METADATA_FIELDS}
         # #5854: message_count and a compact anchor-scene fingerprint go in the
@@ -1771,6 +1776,7 @@ class Session:
             'session_source': self.session_source,
             'source_label': self.source_label,
             'read_only': self.read_only,
+            'dashboard_context': self.dashboard_context if isinstance(getattr(self, 'dashboard_context', None), dict) else None,
             'enabled_toolsets': self.enabled_toolsets,
             'composer_draft': self.composer_draft if isinstance(self.composer_draft, dict) else {},
             'process_wakeup_pause': self.process_wakeup_pause if isinstance(self.process_wakeup_pause, dict) else {},
