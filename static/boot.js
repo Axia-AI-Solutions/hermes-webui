@@ -3241,6 +3241,9 @@ window._mirrorSpeechSettingsFromServer=_mirrorSpeechSettingsFromServer;
       ? s.chat_activity_display_mode
       : 'compact_worklog';
     window._transparentStream=window._chatActivityDisplayMode==='transparent_stream';
+    // Axia client mode: a client sees conversations, not the machinery — no CLI/source
+    // buckets, no tool worklog ("Processed 12s"), no workspace suggestions.
+    if(typeof _CLIENT_MODE!=='undefined'&&_CLIENT_MODE){window._showCliSessions=false;window._chatActivityDisplayMode='hide_all_activity';window._transparentStream=false;window._hideEmptyStateSuggestions=true;}
     window._terminalAutoExpandOnOutput=!!s.terminal_auto_expand_on_output;
     window._worklogDetailsExpandedByDefault=!!(
       Object.prototype.hasOwnProperty.call(s,'worklog_details_expanded_default')

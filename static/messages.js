@@ -1755,11 +1755,16 @@ async function send(){
       profile:S.activeProfile||S.session.profile||'default',
       explicit_model_pick:_explicitPick||undefined,
       attachments:uploaded.length?uploaded:undefined,
-      moa_config:_pendingMoaConfig?true:undefined
+      moa_config:_pendingMoaConfig?true:undefined,
+      // Axia client mode: the dashboard item a bridge click started this session from
+      // (client-mode.js sets the slot right before calling send(); consumed once).
+      dashboard_context:(S._pendingDashboardContext&&typeof S._pendingDashboardContext==='object')?S._pendingDashboardContext:undefined
     })});
     _pendingMoaConfig=null;
+    S._pendingDashboardContext=null; // Axia client mode: consumed
     postStartData = startData;
   }catch(e){
+    S._pendingDashboardContext=null; // Axia client mode: never leak onto a later, unrelated turn
     const errMsg=String((e&&e.message)||'');
     // If /api/chat/start returns 404, the session was deleted server-side
     // (its sidecar is gone) while GET kept returning a CLI stub (#2782). Strip
