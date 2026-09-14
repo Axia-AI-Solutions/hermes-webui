@@ -171,6 +171,63 @@ def gate(handler, parsed) -> bool:
     return False
 
 
+# ── Dashboard item context (the iframe→shell bridge) ──────────────────────────
+#
+# A dashboard button carries a prompt AND structured context about the item it
+# belongs to. The prompt becomes the user's message verbatim; the context is
+# persisted on the session (`Session.dashboard_context`) and rendered into the
+# ephemeral system prompt of every gateway turn, so the agent knows WHICH
+# dashboard item the conversation is about without the transcript carrying it.
+
+_CONTEXT_CAPS = {"item_id": 200, "title": 200, "section": 100}
+_CONTEXT_KINDS = frozenset({"finding", "action", "cta"})
+_WEEK_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def normalize_dashboard_context(obj) -> dict | None:
+    """Validate and cap the bridge's context; None when nothing usable is left.
+
+    Unknown keys are dropped, strings are truncated to their cap, `kind` must
+    be one of the three the template emits, `week` must be an ISO date. A bad
+    context never fails the request — the user's message still goes through
+    without it (the caller treats None as "no context").
+    """
+    if not isinstance(obj, dict):
+        return None
+    out: dict = {}
+    for key, cap in _CONTEXT_CAPS.items():
+        raw = obj.get(key)
+        if isinstance(raw, str) and raw.strip():
+            out[key] = raw.strip()[:cap]
+    kind = obj.get("kind")
+    if isinstance(kind, str) and kind in _CONTEXT_KINDS:
+        out["kind"] = kind
+    week = obj.get("week")
+    if isinstance(week, str) and _WEEK_RE.match(week):
+        out["week"] = week
+    return out or None
+
+
+def dashboard_context_prompt_line(ctx) -> str:
+    """One line for the agent's ephemeral context; '' when there is no context."""
+    if not isinstance(ctx, dict) or not ctx:
+        return ""
+    bits = []
+    if ctx.get("title"):
+        bits.append(f'item "{ctx["title"]}"')
+    if ctx.get("kind"):
+        bits.append(ctx["kind"])
+    if ctx.get("section"):
+        bits.append(f"section {ctx['section']}")
+    if ctx.get("week"):
+        bits.append(f"week of {ctx['week']}")
+    if ctx.get("item_id"):
+        bits.append(f"id {ctx['item_id']}")
+    return ("- Dashboard item: this conversation was started from the weekly marketing dashboard, "
+            + ", ".join(bits)
+            + ". Answer about that item unless the user changes subject.")
+
+
 # ── Workspace pin ─────────────────────────────────────────────────────────────
 
 def pin_workspace(candidate: Path, boot_default: Path) -> Path:

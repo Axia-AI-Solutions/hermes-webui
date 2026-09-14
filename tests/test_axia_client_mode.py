@@ -307,3 +307,37 @@ def test_server_calls_the_gate_on_both_dispatch_paths():
         assert "check_auth(self, parsed)" in block
         assert "client_mode_gate(self, parsed)" in block
         assert block.index("check_auth(self, parsed)") < block.index("client_mode_gate(self, parsed)")
+
+
+# ── dashboard_context (the bridge's structured item context) ─────────────────
+
+def test_dashboard_context_round_trip():
+    ctx = {"item_id": "2026-09-07:what-moved:01", "title": "2-star Google review, Sep 4",
+           "section": "what-moved", "kind": "finding", "week": "2026-09-07"}
+    assert cm.normalize_dashboard_context(dict(ctx)) == ctx
+
+
+def test_dashboard_context_caps_and_drops_unknown_keys():
+    out = cm.normalize_dashboard_context({"title": "x" * 500, "section": "y" * 500, "item_id": "z" * 500,
+                                          "kind": "cta", "week": "2026-09-07", "evil": "<script>", "n": 3})
+    assert len(out["title"]) == 200 and len(out["section"]) == 100 and len(out["item_id"]) == 200
+    assert "evil" not in out and "n" not in out
+
+
+def test_dashboard_context_rejects_bad_kind_and_week_but_keeps_the_rest():
+    out = cm.normalize_dashboard_context({"title": "t", "kind": "hack", "week": "Sep 7"})
+    assert out == {"title": "t"}
+
+
+@pytest.mark.parametrize("bad", [None, "text", 7, [], {}, {"title": "", "kind": "nope"}, {"title": 12}])
+def test_dashboard_context_non_dict_or_empty_is_none(bad):
+    assert cm.normalize_dashboard_context(bad) is None
+
+
+def test_dashboard_context_prompt_line_names_the_item():
+    line = cm.dashboard_context_prompt_line({"item_id": "2026-09-07:what-moved:01", "title": "2-star review",
+                                             "section": "what-moved", "kind": "finding", "week": "2026-09-07"})
+    for needle in ("2-star review", "finding", "what-moved", "2026-09-07", "2026-09-07:what-moved:01"):
+        assert needle in line
+    assert cm.dashboard_context_prompt_line(None) == ""
+    assert cm.dashboard_context_prompt_line({}) == ""
