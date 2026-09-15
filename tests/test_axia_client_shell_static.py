@@ -110,7 +110,7 @@ def test_bridge_validates_by_window_identity_and_opaque_origin():
     assert "d.v !== 1" in fn
     assert "prompt.length > PROMPT_MAX" in fn and "var PROMPT_MAX = 4000;" in js
     assert "var CONTEXT_CAPS = {item_id: 200, title: 200, section: 100};" in js
-    assert "var CONTEXT_KINDS = {finding: 1, action: 1, cta: 1};" in js
+    assert "var CONTEXT_KINDS = {finding: 1, action: 1, cta: 1, task: 1};" in js
 
 
 def test_bridge_action_is_new_session_then_rename_then_send_with_context():
@@ -131,11 +131,17 @@ def test_bridge_action_is_new_session_then_rename_then_send_with_context():
     assert "_actionChain = _actionChain.then(" in js, "clicks are serialised, never deduplicated"
 
 
-def test_reverse_channel_is_reserved_not_used():
+def test_reverse_channel_echoes_a_task_update_and_nothing_else():
+    """shell -> dashboard. Reserved until 2026-09-15; its first and only use is
+    telling the page that a "Mark done" click was recorded, so the button can
+    show it. Anything else added here should come with its own test."""
     js = _read("client-mode.js")
     assert "function postToDashboard(msg)" in js
     assert "frame.contentWindow.postMessage(msg, '*')" in js
-    assert js.count("postToDashboard(") == 1, "the declaration only — no caller yet"
+    callers = [l for l in js.splitlines() if "postToDashboard(" in l
+               and "function postToDashboard" not in l and "window.postToDashboard" not in l]
+    assert len(callers) == 1, callers
+    assert "axia.shell.task-updated" in callers[0]
     assert "window.postToDashboard = postToDashboard;" in js
 
 
@@ -180,3 +186,65 @@ def test_empty_state_copy_names_the_agent_and_drops_i18n_binding():
 def test_client_mode_js_is_registered_after_panels_js():
     html = _read("index.html")
     assert html.index('src="static/panels.js') < html.index('src="static/client-mode.js') < html.index('src="static/boot.js')
+
+
+# ── The Plan view (2026-09-15) ───────────────────────────────────────────────
+#
+# Structural, like everything else in this file: the markup, the panel wiring and
+# the bridge literals. What the view DOES with the data is covered by
+# tests/test_axia_client_plan.py against the real handlers.
+
+def test_plan_view_markup_exists_once():
+    html = _read("index.html")
+    assert html.count('id="mainClientplan"') == 1
+    assert html.count('data-panel="clientplan"') == 2      # the rail and the sidebar nav
+    for needle in ('id="clientplanTabs"', 'id="clientplanObjectives"', 'id="clientplanTasks"',
+                   'id="clientplanEmpty"', 'id="clientplanRevision"'):
+        assert html.count(needle) == 1, needle
+    assert 'No plan yet. It appears after the first Monday run.' in html
+
+
+def test_plan_panel_is_registered_and_always_visible_in_client_mode():
+    js = _read("panels.js")
+    panels = js[js.index("const MAIN_VIEW_PANELS = ["):js.index("const MAIN_VIEW_SIDEBAR_PANEL_FALLBACKS")]
+    assert "'clientplan'" in panels
+    always = next(l for l in js.splitlines() if "_ALWAYS_VISIBLE_TABS = new Set(" in l)
+    assert "'clientplan'" in always
+    assert "if (nextPanel === 'clientplan' && typeof loadClientPlan === 'function') await loadClientPlan();" in js
+    assert "if (panel === 'clientplan') mainText = 'Plan';" in js
+
+
+def test_plan_view_shares_the_dashboard_chrome():
+    js = _read("client-mode.js")
+    fn = js[js.index("function _clientModeOnPanel("):js.index("function _afterMove(")]
+    assert "name === 'clientdash' || name === 'clientplan'" in fn
+
+
+def test_client_mode_js_carries_the_plan_functions_and_endpoint():
+    js = _read("client-mode.js")
+    assert "function loadClientPlan" in js
+    assert "function postPlanEvent" in js
+    assert "'/api/plan/events'" in js
+
+
+def test_the_task_bridge_is_named_in_both_directions():
+    js = _read("client-mode.js")
+    assert "axia.dashboard.task" in js
+    assert "axia.shell.task-updated" in js
+
+
+def test_connect_modal_markup_and_steps():
+    html = _read("index.html")
+    assert html.count('id="connectModal"') == 1
+    js = _read("client-mode.js")
+    assert "axia.dashboard.connect" in js
+    assert "'api/connections'" in js
+    assert "Notify new users by email" in js          # the GA4 step that saves the client a surprise email
+    assert "Users and permissions" in js              # the GSC step
+
+
+def test_the_shell_never_writes_an_inferred_status():
+    """The app writes `done` or `open`; an inference is the agent's, in its own file."""
+    js = _read("client-mode.js")
+    assert "inferred_done" not in js and "inferred_not_started" not in js
+    assert "var TASK_STATUSES = {done: 1, open: 1};" in js

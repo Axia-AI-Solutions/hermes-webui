@@ -30,7 +30,7 @@ import json
 import mimetypes
 import os
 import re
-from datetime import date as _date
+from datetime import date as _date, datetime, timezone
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -80,6 +80,10 @@ ALLOWED: dict[str, frozenset[str]] = {
     "commands": READ,
     # the dashboard tab's own listing
     "client-dashboard": READ,
+    # the plan: GET the derived state, POST one event when a person ticks a box
+    "plan": frozenset({"GET", "POST"}),
+    # the channel connection state the host-side puller writes
+    "connections": READ,
 }
 
 # Every other family the tree carries today, DENIED ON PURPOSE. Listed so the
@@ -182,7 +186,7 @@ def gate(handler, parsed) -> bool:
 # dashboard item the conversation is about without the transcript carrying it.
 
 _CONTEXT_CAPS = {"item_id": 200, "title": 200, "section": 100}
-_CONTEXT_KINDS = frozenset({"finding", "action", "cta"})
+_CONTEXT_KINDS = frozenset({"finding", "action", "cta", "task"})
 _WEEK_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
@@ -274,6 +278,104 @@ def dashboard_dir() -> Path:
     home = os.getenv("HERMES_HOME", "").strip()
     base = Path(home).expanduser() if home else Path.home() / ".hermes"
     return base / "home" / "dashboard"
+
+
+def plan_dir() -> Path:
+    """`<HERMES_HOME>/home/plan` — the plan skill writes here, the Plan view reads."""
+    home = os.getenv("HERMES_HOME", "").strip()
+    base = Path(home).expanduser() if home else Path.home() / ".hermes"
+    return base / "home" / "plan"
+
+
+def connections_dir() -> Path:
+    """`<HERMES_HOME>/home/data/connections` — the HOST-side puller writes here.
+
+    The service-account key never comes near this process or the agent's
+    container; what lands here is the state and the weekly numbers it pulled.
+    """
+    home = os.getenv("HERMES_HOME", "").strip()
+    base = Path(home).expanduser() if home else Path.home() / ".hermes"
+    return base / "home" / "data" / "connections"
+
+
+# A task id is a path segment that the plan skill minted, and the same literal
+# is asserted against `static/client-mode.js` by a test: the two sides of the
+# bridge cannot drift into accepting different ids.
+TASK_ID_RE = re.compile(r"^task\.[a-z0-9_.-]{1,120}$")
+TASK_STATUSES = frozenset({"done", "open"})
+
+
+def handle_plan_get(handler, root: Path | None = None) -> bool:
+    """`GET /api/plan` — the derived state, or 404 before the first tick."""
+    from api.helpers import j
+
+    root = root or plan_dir()
+    state = root / "plan.state.json"
+    try:
+        data = json.loads(state.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return j(handler, {"error": "no plan yet"}, status=404) or True
+    return j(handler, data) or True
+
+
+def handle_plan_event_post(handler, root: Path | None = None, by: str | None = None) -> bool:
+    """`POST /api/plan/events` — one line, appended, attributed to the session.
+
+    The sidecar is one of the two writers of `events.jsonl` (the other is the
+    tick, for a data close). It writes `via: "shell"` and never anything else:
+    an `inferred_*` status is the agent's to record, in its own file, and is
+    refused here so a click can never be confused with a guess.
+    """
+    from api.helpers import j
+
+    root = root or plan_dir()
+    try:
+        length = int(handler.headers.get("Content-Length") or 0)
+        payload = json.loads(handler.rfile.read(length) or b"{}")
+    except (ValueError, OSError):
+        return j(handler, {"error": "bad request body"}, status=400) or True
+    if not isinstance(payload, dict):
+        return j(handler, {"error": "bad request body"}, status=400) or True
+    task_id = payload.get("task_id")
+    status = payload.get("status")
+    note = payload.get("note")
+    if not isinstance(task_id, str) or not TASK_ID_RE.match(task_id):
+        return j(handler, {"error": "bad task_id"}, status=400) or True
+    if status not in TASK_STATUSES:
+        return j(handler, {"error": "bad status"}, status=400) or True
+    if note is not None and (not isinstance(note, str) or len(note) > 500):
+        return j(handler, {"error": "bad note"}, status=400) or True
+    event = {
+        "ts": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "task": task_id,
+        "status": status,
+        "by": by or "client",
+        "via": "shell",
+    }
+    if note:
+        event["note"] = note
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+        fd = os.open(str(root / "events.jsonl"), os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o644)
+        try:
+            os.write(fd, (json.dumps(event, separators=(",", ":")) + "\n").encode("utf-8"))
+        finally:
+            os.close(fd)
+    except OSError as exc:
+        return j(handler, {"error": f"could not record: {exc.__class__.__name__}"}, status=500) or True
+    return j(handler, {"ok": True}) or True
+
+
+def handle_connections_get(handler, root: Path | None = None) -> bool:
+    """`GET /api/connections` — what the puller last saw, or 404 before it ran."""
+    from api.helpers import j
+
+    root = root or connections_dir()
+    try:
+        data = json.loads((root / "status.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return j(handler, {"error": "no connections yet"}, status=404) or True
+    return j(handler, data) or True
 
 
 def resolve_dashboard_file(rel: str, root: Path | None = None) -> Path | None:
@@ -451,7 +553,7 @@ def _week_label(week_start) -> str | None:
     return f"{dt:%b} {dt.day}"
 
 
-def compose_announcement(dashboard_json, bot_name: str) -> tuple[str, str]:
+def compose_announcement(dashboard_json, bot_name: str, plan_state=None) -> tuple[str, str]:
     """(title, text) for the announcement session, from the skill's dashboard.json.
 
     Written in the agent's first person. With no readable JSON the message is
@@ -489,8 +591,32 @@ def compose_announcement(dashboard_json, bot_name: str) -> tuple[str, str]:
     else:
         lines.append(f"Your dashboard for {when} is ready. {changed} and none needs you this week:")
         lines.extend(f"• {f['headline'].strip()}" for f in findings[:4])
+    plan_line = _plan_line(plan_state)
+    if plan_line:
+        lines.append(plan_line)
     lines.append("Open the Dashboard tab to read it, or ask me here about any of these.")
     return title, "\n".join(lines)
+
+
+def _plan_line(plan_state) -> str | None:
+    """One sentence about the plan, or nothing at all.
+
+    `inferred` is said out loud because an inference is NOT a completion: the
+    person is the only one who can close a task the data cannot close, and the
+    weekly message is where they are asked to.
+    """
+    if not isinstance(plan_state, dict):
+        return None
+    counts = plan_state.get("counts")
+    if not isinstance(counts, dict):
+        return None
+    def _n(key):
+        v = counts.get(key)
+        return v if isinstance(v, int) and not isinstance(v, bool) else 0
+    this_week, overdue, inferred = _n("this_week"), _n("overdue"), _n("inferred")
+    word = "task" if this_week == 1 else "tasks"
+    return (f"Your plan this week: {this_week} {word}, {overdue} overdue, "
+            f"{inferred} I think you did - confirm them in Plan.")
 
 
 def maybe_announce(root: Path, create_session, bot_name: str = "your agent") -> bool:
@@ -509,7 +635,12 @@ def maybe_announce(root: Path, create_session, bot_name: str = "your agent") -> 
         dashboard_json = json.loads((root / "dashboard.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         dashboard_json = None
-    title, text = compose_announcement(dashboard_json, bot_name)
+    plan_state = None
+    try:                                  # fail-soft: no plan yet is the normal first week
+        plan_state = json.loads((plan_dir() / "plan.state.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        plan_state = None
+    title, text = compose_announcement(dashboard_json, bot_name, plan_state)
     try:
         create_session(title, text)
     except Exception:

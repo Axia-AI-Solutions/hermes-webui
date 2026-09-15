@@ -1,0 +1,2182 @@
+{
+ "contract_version": "2.0",
+ "slug": "potomac",
+ "school": "University of the Potomac",
+ "prepared_for": "Brandi",
+ "week_start": "2026-09-07",
+ "prev_week": "2026-08-24",
+ "generated_at": "2026-09-15T21:18:43Z",
+ "coverage": {
+  "brand_serp": "ok",
+  "content_mentions": "ok",
+  "content_timeline": "ok",
+  "curation": "empty",
+  "emerging": "ok",
+  "entity_aliases": "ok",
+  "google_places": "ok",
+  "google_reviews_full": "ok",
+  "google_reviews_stable": "ok",
+  "institution_profile": "ok",
+  "keyword_gaps": "ok",
+  "link_dating": "skipped",
+  "listing_presence": "ok",
+  "news_serp": "ok",
+  "niche": "skipped",
+  "peer_news": "ok",
+  "peer_sentiment": "ok",
+  "peer_set": "ok",
+  "platform_registry": "ok",
+  "press_search": "ok",
+  "probes": "ok",
+  "reddit": "ok",
+  "rmp": "ok",
+  "striking_distance": "ok",
+  "traffic": "ok",
+  "trustpilot": "empty"
+ },
+ "wording": {
+  "week_lede": "Ranked by how much moved and whether you can act on it. This is an outside-in view: reviews, forums, press, search and AI answers. It does not measure the enrollment funnel; the Connect section shows what would.",
+  "week_footnote": "Trend lines appear at three comparable weeks.",
+  "actions_sub": "What Potomac can do this week, ranked. Derived from the findings.",
+  "reputation_headline": "Students praise the people who enrolled them. The complaints cluster on visas and legitimacy.",
+  "reputation_lede": "Google is the only review platform with volume. RateMyProfessors has 5 entries; Trustpilot has none; Niche is not read yet.",
+  "reputation_rating_sub": "reviews, one listing",
+  "conversation_headline": "Reddit talks about Potomac as a Day 1 CPT school. Nobody else is talking.",
+  "conversation_lede": "",
+  "conversation_positioning": "International students compare Potomac with Harrisburg, Trine and National Louis on Day 1 CPT terms. That is the frame the market has chosen; the site does not address it.",
+  "competition_headline": "The schools that beat Potomac in AI answers are not the schools it prices against.",
+  "competition_lede": "The market peer set Axia tracks for reputation and search: the schools Potomac competes with for the same students on price, format and audience.",
+  "competition_two_lists": "AI engines decide who to name by what they find on the open web, so the rivals that appear in answers are the large local institutions. The market peer set is the group the school competes with for the same students on price, format and audience. Both matter; they answer different questions.",
+  "competition_history_sub": "Ratings barely move; the review count does.",
+  "connect_lede": "Everything above is read from the outside. These four sources would close the loop to enrollment.",
+  "band_local_label": "Local (DC + NoVA)",
+  "press_outlets": "local DC and Virginia outlets",
+  "conversation_reddit_prompt": "Summarise how Reddit users describe Potomac in Day 1 CPT threads, what they ask, and what they compare it against.",
+  "conversation_press_prompt": "Potomac has had no earned press in 90 days. What are three newsworthy angles from what the school already does, and which outlets cover peers like UDC and Bay Atlantic?"
+ },
+ "short_name": "Potomac",
+ "peer_abbreviations": {
+  "University": "U.",
+  "American Public U. System": "APUS",
+  "American InterContinental U.": "AIU",
+  "Washington U. of Science and Technology": "WUST",
+  "U. of the District of Columbia": "UDC"
+ },
+ "overview": {
+  "strip": {
+   "reviews": {
+    "new": 1,
+    "avg": 5.0,
+    "rating": 4.4,
+    "count": 156,
+    "unanswered_neg": 8,
+    "delta_count": 1
+   },
+   "conversation": {
+    "new": 0,
+    "reddit_new": 0,
+    "web_new": 0,
+    "press_new": 0,
+    "flags": 2,
+    "last_reddit": "2026-08-11"
+   },
+   "presence": {
+    "owned_top10": 1,
+    "aliases": [
+     "University of the Potomac",
+     "Potomac University"
+    ],
+    "confusers": 1
+   }
+  },
+  "findings": [
+   {
+    "vertical": "reputation",
+    "magnitude": 3,
+    "confidence": 1,
+    "actionability": 2,
+    "score": 6,
+    "headline": "A new 2-star Google review from Sep 4 has no owner reply",
+    "evidence": "Topic: admissions process. I’m currently enrolled and attending the Virginia campus, enrollment began on January 5, 2026. As a transfer  student from Stratford Univers… 26 of 156 reviews still lack a reply.",
+    "action_tag": "needs_you",
+    "prompt": "Draft a reply to the 2-star Google review from 2026-09-04 about admissions process. Under 120 words, no promises about outcomes.",
+    "card_ref": "1.5",
+    "rank": 1
+   },
+   {
+    "vertical": "conversation",
+    "magnitude": 3,
+    "confidence": 1,
+    "actionability": 1,
+    "score": 3,
+    "headline": "A fake-diploma spam page is using the Potomac name",
+    "evidence": "knowledgehub.pislmsids.org, first seen 2026-08-06, Chinese-language page selling forged Potomac degrees and transcripts.",
+    "action_tag": "watch",
+    "prompt": "Explain the fake-diploma page that mentions Potomac and what a takedown or disavow path looks like.",
+    "card_ref": "2.4",
+    "rank": 2
+   },
+   {
+    "vertical": "reputation",
+    "magnitude": 2,
+    "confidence": 1,
+    "actionability": 1,
+    "score": 2,
+    "headline": "+1 Google review since the last measurement, rating steady at 4.40",
+    "evidence": "156 reviews total. Owner response rate 75%.",
+    "action_tag": "watch",
+    "prompt": "Show me the Google reviews that arrived since 24 August and what they praise or complain about.",
+    "card_ref": "1.2",
+    "rank": 3
+   },
+   {
+    "vertical": "search_listings",
+    "magnitude": 1,
+    "confidence": 1,
+    "actionability": 2,
+    "score": 2,
+    "headline": "WVU Potomac State College ranks #5 for \"Potomac University\"",
+    "evidence": "First measurement. A different institution appears on page one of a branded search; it competes with the school's own pages for the click.",
+    "action_tag": "needs_you",
+    "prompt": "What can we do about another institution ranking on page one for a search of our own name? Context: WVU Potomac State College ranks #5 for \"Potomac University\".",
+    "card_ref": "1.8",
+    "rank": 4
+   }
+  ],
+  "unchanged": [
+   "Google rating steady at 4.40",
+   "No new Reddit threads or earned press this week"
+  ],
+  "actions": [
+   {
+    "priority": 1,
+    "action": "Reply to the 8 negative Google reviews that have no owner response",
+    "why": "Newest is the 2-star from Sep 4 (admissions process). Response rate is 75%; unanswered negatives are what prospects read first.",
+    "effort": "45 min",
+    "prompt": "Draft replies to the unanswered negative Google reviews, newest first. Under 120 words each, factual, no promises about outcomes.",
+    "card_ref": "1.5",
+    "owner": "Brandi",
+    "rank": 1
+   },
+   {
+    "priority": 3,
+    "action": "Post weekly on the Google Business Profile and ask new students to review using the full school name",
+    "why": "WVU Potomac State College ranks #5 for \"Potomac University\". Fresh owner posts and reviews that spell out University of the Potomac push the profile and its pages up.",
+    "effort": "20 min a week",
+    "prompt": "Give me a four-week Google Business Profile posting plan for University of the Potomac and a review-request message that uses the full school name.",
+    "card_ref": "1.8",
+    "owner": "Brandi",
+    "rank": 2
+   },
+   {
+    "priority": 4,
+    "action": "Report the fake-diploma page to Google and to the host",
+    "why": "knowledgehub.pislmsids.org sells forged Potomac degrees. A takedown request costs little and the page otherwise stays indexed under the school's name.",
+    "effort": "30 min",
+    "prompt": "Draft a takedown and spam report for the fake-diploma page that uses the University of the Potomac name, addressed to Google and to the hosting provider.",
+    "card_ref": "2.4",
+    "owner": "Brandi",
+    "rank": 3
+   },
+   {
+    "priority": 5,
+    "action": "Decide whether the school answers in r/Day1CPTuniversities, and publish one FAQ page that answers what those threads ask",
+    "why": "12 of 25 threads naming the school are in that subreddit and the questions repeat. Check whether the site answers them; an FAQ page the engines can cite is the cheapest fix.",
+    "effort": "Half a day",
+    "prompt": "Summarise the questions students ask about University of the Potomac in r/Day1CPTuniversities and draft the outline of an FAQ page that answers them accurately.",
+    "card_ref": "2.2",
+    "owner": "Brandi",
+    "rank": 4
+   },
+   {
+    "priority": 6,
+    "action": "Pitch one story to a local or trade outlet",
+    "why": "No earned press mentioning Potomac in 90 days while every market peer had 2 to 22 articles this week. One placement changes the AI engines' source mix too.",
+    "effort": "2 hours",
+    "prompt": "Propose three story angles about University of the Potomac for local DC and Virginia outlets or higher-ed trade press, based on what the school already does.",
+    "card_ref": "2.5",
+    "owner": "Brandi",
+    "rank": 5
+   }
+  ]
+ },
+ "reputation": {
+  "google": {
+   "state": "measured",
+   "rating": 4.4,
+   "count": 156,
+   "response_rate": 74.51,
+   "new_this_week": 1,
+   "unanswered_total": 26
+  },
+  "history": [
+   {
+    "week": "2026-06-29",
+    "rating": 4.4,
+    "count": 148,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-07-06",
+    "rating": 4.4,
+    "count": 148,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-07-13",
+    "rating": 4.4,
+    "count": 148,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-07-20",
+    "rating": 4.4,
+    "count": 148,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-07-27",
+    "rating": 4.4,
+    "count": 148,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-08-03",
+    "rating": 4.4,
+    "count": 149,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-08-10",
+    "rating": 4.4,
+    "count": 149,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-08-24",
+    "rating": 4.4,
+    "count": 155,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-09-07",
+    "rating": 4.4,
+    "count": 156,
+    "reconstructed": false
+   }
+  ],
+  "new_reviews": [
+   {
+    "date": "2026-09-07",
+    "rating": 5.0,
+    "aspect": "cost_value",
+    "tone": "positive",
+    "text": "I have been enrolled at the University of the Potomac from August 31, 2026 as a doctoral Student. The academic curriculum of this University is amazing and affordable. Miss Ravena Guedes was my enrollment officer and she was amazing. She helped me through all ",
+    "replied": false
+   }
+  ],
+  "aspects": [
+   {
+    "aspect": "admissions_process",
+    "total": 47,
+    "positive": 45,
+    "negative": 2,
+    "neutral": 0,
+    "share": 40.17
+   },
+   {
+    "aspect": "staff_responsiveness",
+    "total": 38,
+    "positive": 30,
+    "negative": 7,
+    "neutral": 1,
+    "share": 32.48
+   },
+   {
+    "aspect": "academics_quality",
+    "total": 8,
+    "positive": 5,
+    "negative": 1,
+    "neutral": 2,
+    "share": 6.84
+   },
+   {
+    "aspect": "visa_cpt_opt",
+    "total": 6,
+    "positive": 0,
+    "negative": 4,
+    "neutral": 2,
+    "share": 5.13
+   },
+   {
+    "aspect": "advising_support",
+    "total": 5,
+    "positive": 5,
+    "negative": 0,
+    "neutral": 0,
+    "share": 4.27
+   },
+   {
+    "aspect": "cost_value",
+    "total": 4,
+    "positive": 2,
+    "negative": 2,
+    "neutral": 0,
+    "share": 3.42
+   },
+   {
+    "aspect": "other",
+    "total": 4,
+    "positive": 2,
+    "negative": 2,
+    "neutral": 0,
+    "share": 3.42
+   },
+   {
+    "aspect": "legitimacy_accreditation",
+    "total": 3,
+    "positive": 0,
+    "negative": 3,
+    "neutral": 0,
+    "share": 2.56
+   },
+   {
+    "aspect": "career_outcomes",
+    "total": 2,
+    "positive": 1,
+    "negative": 1,
+    "neutral": 0,
+    "share": 1.71
+   }
+  ],
+  "corpus": 117,
+  "negative_aspects": [
+   {
+    "aspect": "visa_cpt_opt",
+    "positive": 0,
+    "negative": 4,
+    "total": 6
+   },
+   {
+    "aspect": "legitimacy_accreditation",
+    "positive": 0,
+    "negative": 3,
+    "total": 3
+   }
+  ],
+  "unanswered": [
+   {
+    "date": "2026-09-04",
+    "rating": 2.0,
+    "aspect": "admissions_process",
+    "text": "I’m currently enrolled and attending the Virginia campus, enrollment began on January 5, 2026. As a transfer  student from Stratford University due to the closures in 2022. They evaluated my credits in 2022 and informed "
+   },
+   {
+    "date": "2024-05-13",
+    "rating": 2.0,
+    "aspect": "staff_responsiveness",
+    "text": "Overall the university is chaotic, like other reviewers mentioned Zola is ignorant, very rude and needs to be trained in customer service. When an ignorant person pretends to be knowledgeable but they are not. Yet, they "
+   },
+   {
+    "date": "2023-01-12",
+    "rating": 1.0,
+    "aspect": "cost_value",
+    "text": "Veterans stay away this school is only interested in taking your money."
+   },
+   {
+    "date": "2022-10-05",
+    "rating": 1.0,
+    "aspect": "visa_cpt_opt",
+    "text": "Stay away from Zola especially if you are an International student whenever you ask her about something she’s going to mention your I 20 and your student visa trying to scare you. And when I try to take a vacation to see"
+   },
+   {
+    "date": "2021-04-26",
+    "rating": 2.0,
+    "aspect": "visa_cpt_opt",
+    "text": "If you are an International Student, please choose another University as you cannot file you H1 in masters cap and so you will have to file in General cap which is of no point in International student's perspective.\n\nThe"
+   }
+  ],
+  "rating_by_month": [
+   {
+    "month": "2025-09",
+    "n": 11,
+    "avg": 4.09
+   },
+   {
+    "month": "2025-10",
+    "n": 13,
+    "avg": 4.54
+   },
+   {
+    "month": "2025-11",
+    "n": 2,
+    "avg": 5.0
+   },
+   {
+    "month": "2025-12",
+    "n": 5,
+    "avg": 4.2
+   },
+   {
+    "month": "2026-01",
+    "n": 9,
+    "avg": 5.0
+   },
+   {
+    "month": "2026-02",
+    "n": 6,
+    "avg": 5.0
+   },
+   {
+    "month": "2026-03",
+    "n": 4,
+    "avg": 5.0
+   },
+   {
+    "month": "2026-04",
+    "n": 4,
+    "avg": 5.0
+   },
+   {
+    "month": "2026-05",
+    "n": 6,
+    "avg": 5.0
+   },
+   {
+    "month": "2026-06",
+    "n": 8,
+    "avg": 4.75
+   },
+   {
+    "month": "2026-07",
+    "n": 4,
+    "avg": 5.0
+   },
+   {
+    "month": "2026-08",
+    "n": 18,
+    "avg": 4.78
+   },
+   {
+    "month": "2026-09",
+    "n": 2,
+    "avg": 3.5
+   }
+  ],
+  "other": {
+   "rmp": {
+    "state": "measured",
+    "count": 5
+   },
+   "trustpilot": {
+    "state": "nothing_found"
+   },
+   "niche": {
+    "state": "not_covered_yet"
+   }
+  }
+ },
+ "conversation": {
+  "reddit": {
+   "state": "measured",
+   "threads": [
+    {
+     "date": "2026-08-11",
+     "subreddit": "Day1CPTuniversities",
+     "title": "Day 1 CPT University recommendations that can process ...",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": "_unclassified",
+     "url": "https://www.reddit.com/r/Day1CPTuniversities/comments/1vlfjm8/day_1_cpt_university_recommendations_that_can/",
+     "new": false,
+     "promoted": false
+    },
+    {
+     "date": "2026-08-04",
+     "subreddit": "Day1CPTuniversities",
+     "title": "DBA/ PHD university",
+     "score": null,
+     "comments": null,
+     "tone": "neutral",
+     "aspect": "visa_cpt_opt",
+     "url": "https://www.reddit.com/r/Day1CPTuniversities/comments/1vf22at/dba_phd_university/",
+     "new": false,
+     "promoted": false
+    },
+    {
+     "date": "2026-08-01",
+     "subreddit": "Day1CPTuniversities",
+     "title": "My STEM OPT expires in Feb 2027. I am looking to enroll in a low-budget Day 1 CPT DBA or PhD program in Aug…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/Day1CPTuniversities/comments/1vcr0u9/my_stem_opt_expires_in_feb_2027_i_am_looking_to/",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "2026-05-31",
+     "subreddit": "Day1CPTuniversities",
+     "title": "DCS in UOTP Anyone applied for doctorate of computer science program at university of the potomac. Going to…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/Day1CPTuniversities/comments/1tt94qk/dcs_in_uotp/",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "2026-05-09",
+     "subreddit": "ApplyingToCollege",
+     "title": "College Rankings by Median salary",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": "_unclassified",
+     "url": "https://www.reddit.com/r/ApplyingToCollege/comments/1t8purl/college_rankings_by_median_salary/",
+     "new": false,
+     "promoted": false
+    },
+    {
+     "date": "2026-05-02",
+     "subreddit": "Day1CPTuniversities",
+     "title": "DBA at National Louis University or University of the Potomac — how competitive Hey everyone, I’m currently…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/Day1CPTuniversities/comments/1t1bf00/dba_at_national_louis_university_or_university_of/",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "2026-04-30",
+     "subreddit": "Day1CPTuniversities",
+     "title": "Trying to decide between University of the Potomac vs Harrisburg University for Day 1 CPT — need advice! I’m…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/Day1CPTuniversities/comments/1szxtdu/trying_to_decide_between_university_of_the/",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "2026-04-28",
+     "subreddit": "Day1CPTuniversities",
+     "title": "Best University to start CPT in 1st week of May? I want to transfer into a university that is flexible enough…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/Day1CPTuniversities/comments/1sxne5z/best_university_to_start_cpt_in_1st_week_of_may/",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "2026-04-02",
+     "subreddit": "Day1CPTuniversities",
+     "title": "University of the Potomac in DC for CPT I am considering Potomac and Harrisburg university for MIT program…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/Day1CPTuniversities/comments/1saps0g/university_of_the_potomac_in_dc_for_cpt/",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "2025-09-29",
+     "subreddit": "Day1CPTuniversities",
+     "title": "Day 1 CPT PhD Programs vs. Doctoral Program",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": "_unclassified",
+     "url": "https://www.reddit.com/r/Day1CPTuniversities/comments/1ntnd3r/day_1_cpt_phd_programs_vs_doctoral_program/",
+     "new": false,
+     "promoted": false
+    },
+    {
+     "date": "2025-04-06",
+     "subreddit": "Day1CPTuniversities",
+     "title": "University of Potomac MBA for Day1 CPT? Thoughts?",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/Day1CPTuniversities/comments/1jsuhyu/university_of_potomac_mba_for_day1_cpt/",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "2024-12-03",
+     "subreddit": "Day1CPTuniversities",
+     "title": "How are these universities? I am just came across University of the Potomac and Campbellsville University and…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/Day1CPTuniversities/comments/1h5oflh/how_are_these_universities/",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "2024-12-02",
+     "subreddit": "f1visa",
+     "title": "Initial OPT RFE! Help needed urgently",
+     "score": null,
+     "comments": null,
+     "tone": "negative",
+     "aspect": "visa_cpt_opt",
+     "url": "https://www.reddit.com/r/f1visa/comments/1h4nh61/initial_opt_rfe_help_needed_urgently/",
+     "new": false,
+     "promoted": false
+    },
+    {
+     "date": "2024-08-23",
+     "subreddit": "college",
+     "title": "My university is not allowing me to pick my own classes. ...",
+     "score": null,
+     "comments": null,
+     "tone": "negative",
+     "aspect": "admissions_process",
+     "url": "https://www.reddit.com/r/college/comments/1ezraw5/my_university_is_not_allowing_me_to_pick_my_own/",
+     "new": false,
+     "promoted": false
+    },
+    {
+     "date": "2024-08-14",
+     "subreddit": "Day1CPTuniversities",
+     "title": "[deleted] [removed] [link] [comments] Before enrolling into Potomac, let me tell you: I inquire into…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/Day1CPTuniversities/comments/1es9stj/university_of_the_potomac/?tl=tr",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "2024-03-20",
+     "subreddit": "WMATA",
+     "title": "How does a University sign up for the U-Pass program",
+     "score": null,
+     "comments": null,
+     "tone": "negative",
+     "aspect": "other",
+     "url": "https://www.reddit.com/r/WMATA/comments/1bjlsck/how_does_a_university_sign_up_for_the_upass/",
+     "new": false,
+     "promoted": false
+    },
+    {
+     "date": "2022-09-17",
+     "subreddit": "ApplyingToCollege",
+     "title": "What is the worst collage in the U.S?",
+     "score": null,
+     "comments": null,
+     "tone": "negative",
+     "aspect": "legitimacy_accreditation",
+     "url": "https://www.reddit.com/r/ApplyingToCollege/comments/xgt5h3/what_is_the_worst_collage_in_the_us/",
+     "new": false,
+     "promoted": false
+    },
+    {
+     "date": "",
+     "subreddit": "gradadmissions",
+     "title": "How are the psychology graduate programs like an Azusa .... DBA at National Louis University or University of…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/gradadmissions/comments/1v0c2sw/how_are_the_psychology_graduate_programs_like_an/",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "",
+     "subreddit": "newzealand",
+     "title": "r/newzealand on Reddit: University of Auckland Vs. .... Trying to decide between University of the Potomac vs…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/newzealand/comments/1uxtzm4/university_of_auckland_vs_auckland_university_of/",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "",
+     "subreddit": "Accounting",
+     "title": "Company is cracking down on for-profit degrees and fake .... University of the Potomac is for-profit and it's…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/Accounting/comments/14h56k5/company_is_cracking_down_on_forprofit_degrees_and/",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "",
+     "subreddit": "bosnia",
+     "title": "University of east Sarajevo. DBA at National Louis University or University of the Potomac — how competitive.…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/bosnia/comments/1ux0gp6/university_of_east_sarajevo/",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "",
+     "subreddit": "nursepractitioner",
+     "title": "University of Mary FNP program. Trying to decide between University of the Potomac vs Harrisburg University…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/nursepractitioner/comments/1uvt2ry/university_of_mary_fnp_program/",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "",
+     "subreddit": "Day1CPT_Universities",
+     "title": "Are Campbellsville University and the .... DBA at National Louis University or University of the Potomac —…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/Day1CPT_Universities/comments/1ut5rzm/are_campbellsville_university_and_the_university/",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "",
+     "subreddit": "LawSchool",
+     "title": "Preparing for LA Superior Court Law Clerk Interview. Trying to decide between University of the Potomac vs…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/LawSchool/comments/1uocwpd/preparing_for_la_superior_court_law_clerk/",
+     "new": false,
+     "promoted": true
+    },
+    {
+     "date": "",
+     "subreddit": "Virginia",
+     "title": "How's University of the Potomac,Falls Church, in general?. How's University of the Potomac,Falls Church, in…",
+     "score": null,
+     "comments": null,
+     "tone": null,
+     "aspect": null,
+     "url": "https://www.reddit.com/r/Virginia/comments/1jnzzgd/hows_university_of_the_potomacfalls_church_in/?tl=ja",
+     "new": false,
+     "promoted": true
+    }
+   ],
+   "by_subreddit": [
+    {
+     "subreddit": "Day1CPTuniversities",
+     "n": 12
+    },
+    {
+     "subreddit": "ApplyingToCollege",
+     "n": 2
+    },
+    {
+     "subreddit": "f1visa",
+     "n": 1
+    },
+    {
+     "subreddit": "college",
+     "n": 1
+    },
+    {
+     "subreddit": "WMATA",
+     "n": 1
+    },
+    {
+     "subreddit": "gradadmissions",
+     "n": 1
+    },
+    {
+     "subreddit": "newzealand",
+     "n": 1
+    },
+    {
+     "subreddit": "Accounting",
+     "n": 1
+    },
+    {
+     "subreddit": "bosnia",
+     "n": 1
+    },
+    {
+     "subreddit": "nursepractitioner",
+     "n": 1
+    },
+    {
+     "subreddit": "Day1CPT_Universities",
+     "n": 1
+    },
+    {
+     "subreddit": "LawSchool",
+     "n": 1
+    },
+    {
+     "subreddit": "Virginia",
+     "n": 1
+    }
+   ],
+   "promoted": 17,
+   "dropped_uncertain": 11
+  },
+  "mentions": {
+   "state": "measured",
+   "items": [
+    {
+     "date": "2026-08-24",
+     "domain": "bostoninstituteofanalytics.org",
+     "title": "7 Online Business Schools Merging Global Strategy and Data Skills",
+     "tone": "neutral",
+     "syndicated_on": 0,
+     "url": "https://bostoninstituteofanalytics.org/blog/7-online-business-schools-merging-global-strategy-and-data-skills/",
+     "new": false
+    },
+    {
+     "date": "2026-08-14",
+     "domain": "day1cptuniversities.com",
+     "title": "Top Day 1 CPT DBA Doctoral Programs for International Students in 2026",
+     "tone": "neutral",
+     "syndicated_on": 0,
+     "url": "https://day1cptuniversities.com/blog/day-1-cpt-doctoral-programs-for-international-students",
+     "new": false
+    },
+    {
+     "date": "2026-07-18",
+     "domain": "lifestyle.newsblaze.in",
+     "title": "Influential Women Profiles: Yolanda Bowden, Higher Education Leader Advancing Academic And Health Advocacy",
+     "tone": "positive",
+     "syndicated_on": 3,
+     "url": "https://lifestyle.newsblaze.in/story/188942/influential-women-profiles-yolanda-bowden-higher-education-leader-advancing-academic-and-health-advocacy/",
+     "new": false
+    }
+   ]
+  },
+  "risk_flags": [
+   {
+    "kind": "spam",
+    "domain": "knowledgehub.pislmsids.org",
+    "title": "Fake-diploma spam page names Potomac",
+    "date": "2026-08-06",
+    "url": "https://knowledgehub.pislmsids.org/community/main-forum/%E5%8A%9E%E7%90%86%E7%BE%8E%E5%9B%BD%E5%AD%A6%E4%BD%8D%E8%AF%81%E6%B3%A2%E6%89%98%E9%A9%AC%E5%85%8B%E5%A4%A7%E5%AD%A6%E6%AF%95%E4%B8%9A%E8%AF%81-offer%E3%80%90%E5%BE%AE%E4%BF%A11954292140%E3%80%91/"
+   },
+   {
+    "kind": "confuser",
+    "domain": "www.potomacstatecollege.edu",
+    "title": "WVU Potomac State College ranks #5 for \"Potomac University\"",
+    "date": "2026-09-07",
+    "url": null
+   }
+  ],
+  "earned_press": {
+   "state": "measured",
+   "items": []
+  },
+  "peer_press": [
+   {
+    "domain": "uopeople.edu",
+    "name": "University of the People",
+    "n": 22
+   },
+   {
+    "domain": "apus.edu",
+    "name": "American Public University System",
+    "n": 20
+   },
+   {
+    "domain": "franklin.edu",
+    "name": "Franklin University",
+    "n": 16
+   },
+   {
+    "domain": "udc.edu",
+    "name": "University of the District of Columbia",
+    "n": 13
+   },
+   {
+    "domain": "wust.edu",
+    "name": "Washington University of Science and Technology",
+    "n": 10
+   },
+   {
+    "domain": "bau.edu",
+    "name": "Bay Atlantic University",
+    "n": 10
+   },
+   {
+    "domain": "aiuniv.edu",
+    "name": "American InterContinental University",
+    "n": 4
+   },
+   {
+    "domain": "strayer.edu",
+    "name": "Strayer University",
+    "n": 2
+   }
+  ]
+ },
+ "search_listings": {
+  "organic": [
+   {
+    "week": "2026-06-29",
+    "keywords": 31626,
+    "traffic": 132906.0,
+    "traffic_month": "2026-07",
+    "cwv": 2,
+    "schema": 6.7,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-07-06",
+    "keywords": 31772,
+    "traffic": null,
+    "traffic_month": "2026-07",
+    "cwv": 2,
+    "schema": 6.7,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-07-13",
+    "keywords": 32102,
+    "traffic": 132345.0,
+    "traffic_month": "2026-07",
+    "cwv": 2,
+    "schema": 6.7,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-07-20",
+    "keywords": 31472,
+    "traffic": 126728.0,
+    "traffic_month": "2026-07",
+    "cwv": 2,
+    "schema": 6.7,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-07-27",
+    "keywords": 30642,
+    "traffic": 124950.0,
+    "traffic_month": "2026-07",
+    "cwv": 2,
+    "schema": 6.7,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-08-03",
+    "keywords": 30642,
+    "traffic": 111017.0,
+    "traffic_month": "2026-08",
+    "cwv": 3,
+    "schema": 6.7,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-08-10",
+    "keywords": 30214,
+    "traffic": 122682.0,
+    "traffic_month": "2026-08",
+    "cwv": 3,
+    "schema": 6.7,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-08-24",
+    "keywords": 28124,
+    "traffic": 111355.0,
+    "traffic_month": "2026-09",
+    "cwv": 1,
+    "schema": 6.7,
+    "reconstructed": true
+   },
+   {
+    "week": "2026-09-07",
+    "keywords": 28089,
+    "traffic": 122936.0,
+    "traffic_month": "2026-09",
+    "cwv": 1,
+    "schema": 6.7,
+    "reconstructed": false
+   }
+  ],
+  "brand_serp": {
+   "University of the Potomac": [
+    {
+     "position": 1,
+     "domain": "potomac.edu",
+     "title": "University of the Potomac | On Campus & Online Degree ...",
+     "kind": "owned",
+     "control_class": null
+    },
+    {
+     "position": 4,
+     "domain": "en.wikipedia.org",
+     "title": "University of the Potomac",
+     "kind": "third_party",
+     "control_class": "C5"
+    },
+    {
+     "position": 5,
+     "domain": "en.wikipedia.org",
+     "title": "University of the Potomac",
+     "kind": "third_party",
+     "control_class": "C5"
+    },
+    {
+     "position": 6,
+     "domain": "www.linkedin.com",
+     "title": "University of the Potomac Employees, Location, Alumni",
+     "kind": "third_party",
+     "control_class": "C2"
+    },
+    {
+     "position": 7,
+     "domain": "www.facebook.com",
+     "title": "University of the Potomac | Washington D.C. DC",
+     "kind": "third_party",
+     "control_class": "C2"
+    },
+    {
+     "position": 8,
+     "domain": "www.instagram.com",
+     "title": "University of the Potomac (@uotp) · Washington D.C., DC",
+     "kind": "third_party",
+     "control_class": null
+    },
+    {
+     "position": 9,
+     "domain": "www.niche.com",
+     "title": "University of the Potomac - Washington, DC",
+     "kind": "third_party",
+     "control_class": "C2"
+    },
+    {
+     "position": 10,
+     "domain": "www.yelp.com",
+     "title": "UNIVERSITY OF THE POTOMAC - Updated September 2026",
+     "kind": "third_party",
+     "control_class": "C2"
+    },
+    {
+     "position": 12,
+     "domain": "www.distancelearningportal.com",
+     "title": "University of the Potomac | 20 Online Courses",
+     "kind": "third_party",
+     "control_class": null
+    },
+    {
+     "position": 13,
+     "domain": "www.collegeraptor.com",
+     "title": "University of the Potomac-Washington DC Campus ...",
+     "kind": "third_party",
+     "control_class": "C4"
+    },
+    {
+     "position": 14,
+     "domain": "collegescorecard.ed.gov",
+     "title": "University of the Potomac-VA Campus | College Scorecard",
+     "kind": "third_party",
+     "control_class": "C4"
+    },
+    {
+     "position": 15,
+     "domain": "collegescorecard.ed.gov",
+     "title": "University of the Potomac-VA Campus | College Scorecard",
+     "kind": "third_party",
+     "control_class": "C4"
+    }
+   ],
+   "Potomac University": [
+    {
+     "position": 1,
+     "domain": "potomac.edu",
+     "title": "University of the Potomac | On Campus & Online Degree ...",
+     "kind": "owned",
+     "control_class": null
+    },
+    {
+     "position": 3,
+     "domain": "en.wikipedia.org",
+     "title": "University of the Potomac",
+     "kind": "third_party",
+     "control_class": "C5"
+    },
+    {
+     "position": 4,
+     "domain": "www.linkedin.com",
+     "title": "University of the Potomac Employees, Location, Alumni",
+     "kind": "third_party",
+     "control_class": "C2"
+    },
+    {
+     "position": 5,
+     "domain": "www.potomacstatecollege.edu",
+     "title": "WVU Potomac State College located in Keyser, WV | WVU ...",
+     "kind": "confuser",
+     "control_class": null
+    },
+    {
+     "position": 6,
+     "domain": "www.niche.com",
+     "title": "University of the Potomac - Washington, DC",
+     "kind": "third_party",
+     "control_class": "C2"
+    },
+    {
+     "position": 7,
+     "domain": "www.instagram.com",
+     "title": "University of the Potomac (@uotp) · Washington D.C., DC",
+     "kind": "third_party",
+     "control_class": null
+    },
+    {
+     "position": 8,
+     "domain": "www.yelp.com",
+     "title": "UNIVERSITY OF THE POTOMAC - Updated September 2026",
+     "kind": "third_party",
+     "control_class": "C2"
+    },
+    {
+     "position": 10,
+     "domain": "www.facebook.com",
+     "title": "University of the Potomac | Washington D.C. DC",
+     "kind": "third_party",
+     "control_class": "C2"
+    },
+    {
+     "position": 11,
+     "domain": "www.bachelorsportal.com",
+     "title": "University of the Potomac | 11 Bachelors",
+     "kind": "third_party",
+     "control_class": null
+    },
+    {
+     "position": 12,
+     "domain": "www.collegeraptor.com",
+     "title": "University of the Potomac-Washington DC Campus ...",
+     "kind": "third_party",
+     "control_class": "C4"
+    }
+   ]
+  },
+  "listings": {
+   "grid": [
+    {
+     "platform": "apple_business_connect",
+     "tier": "A",
+     "cells": {
+      "Washington DC": "UNREADABLE",
+      "Northern Virginia": "UNREADABLE"
+     }
+    },
+    {
+     "platform": "bing_places",
+     "tier": "A",
+     "cells": {
+      "Washington DC": "UNREADABLE",
+      "Northern Virginia": "UNREADABLE"
+     }
+    },
+    {
+     "platform": "gbp",
+     "tier": "A",
+     "cells": {
+      "Washington DC": "NEAR_MATCH",
+      "Northern Virginia": "MISMATCH"
+     }
+    },
+    {
+     "platform": "google_kg",
+     "tier": "A",
+     "cells": {
+      "Washington DC": "MATCH",
+      "Northern Virginia": "MATCH"
+     }
+    },
+    {
+     "platform": "wikidata",
+     "tier": "A",
+     "cells": {
+      "Washington DC": "MATCH",
+      "Northern Virginia": "MATCH"
+     }
+    },
+    {
+     "platform": "wikipedia_infobox",
+     "tier": "A",
+     "cells": {
+      "Washington DC": "MATCH",
+      "Northern Virginia": "MATCH"
+     }
+    },
+    {
+     "platform": "dapip",
+     "tier": "B",
+     "cells": {
+      "Washington DC": "MATCH",
+      "Northern Virginia": "MATCH"
+     }
+    },
+    {
+     "platform": "data_axle",
+     "tier": "B",
+     "cells": {
+      "Washington DC": "UNREADABLE",
+      "Northern Virginia": "UNREADABLE"
+     }
+    },
+    {
+     "platform": "foursquare",
+     "tier": "B",
+     "cells": {
+      "Washington DC": "UNREADABLE",
+      "Northern Virginia": "UNREADABLE"
+     }
+    },
+    {
+     "platform": "ipeds",
+     "tier": "B",
+     "cells": {
+      "Washington DC": "MATCH",
+      "Northern Virginia": "MATCH"
+     }
+    },
+    {
+     "platform": "neustar_localeze",
+     "tier": "B",
+     "cells": {
+      "Washington DC": "UNREADABLE",
+      "Northern Virginia": "UNREADABLE"
+     }
+    },
+    {
+     "platform": "scorecard",
+     "tier": "B",
+     "cells": {
+      "Washington DC": "MATCH",
+      "Northern Virginia": "MATCH"
+     }
+    },
+    {
+     "platform": "bbb",
+     "tier": "C",
+     "cells": {
+      "Washington DC": "NOT_LISTED",
+      "Northern Virginia": "NOT_LISTED"
+     }
+    },
+    {
+     "platform": "bigfuture",
+     "tier": "C",
+     "cells": {
+      "Washington DC": "MATCH",
+      "Northern Virginia": "MATCH"
+     }
+    },
+    {
+     "platform": "collegefactual",
+     "tier": "C",
+     "cells": {
+      "Washington DC": "NOT_LISTED",
+      "Northern Virginia": "NOT_LISTED"
+     }
+    },
+    {
+     "platform": "facebook",
+     "tier": "C",
+     "cells": {
+      "Washington DC": "NEAR_MATCH",
+      "Northern Virginia": "MISMATCH"
+     }
+    },
+    {
+     "platform": "linkedin",
+     "tier": "C",
+     "cells": {
+      "Washington DC": "MATCH",
+      "Northern Virginia": "MATCH"
+     }
+    },
+    {
+     "platform": "niche",
+     "tier": "C",
+     "cells": {
+      "Washington DC": "MATCH",
+      "Northern Virginia": "MATCH"
+     }
+    },
+    {
+     "platform": "petersons",
+     "tier": "C",
+     "cells": {
+      "Washington DC": "NOT_LISTED",
+      "Northern Virginia": "NOT_LISTED"
+     }
+    },
+    {
+     "platform": "usnews",
+     "tier": "C",
+     "cells": {
+      "Washington DC": "NOT_LISTED",
+      "Northern Virginia": "NOT_LISTED"
+     }
+    },
+    {
+     "platform": "yelp",
+     "tier": "C",
+     "cells": {
+      "Washington DC": "NEAR_MATCH",
+      "Northern Virginia": "MISMATCH"
+     }
+    }
+   ],
+   "counts": {
+    "UNREADABLE": 10,
+    "NOT_LISTED": 8,
+    "MATCH": 18,
+    "NEAR_MATCH": 3,
+    "MISMATCH": 3
+   },
+   "gaps": [
+    "BBB",
+    "College Factual",
+    "Peterson's",
+    "US News"
+   ],
+   "mismatches": [
+    [
+     "Facebook",
+     "Northern Virginia"
+    ],
+    [
+     "Google Business Profile",
+     "Northern Virginia"
+    ],
+    [
+     "Yelp",
+     "Northern Virginia"
+    ]
+   ]
+  },
+  "site_health": [
+   {
+    "domain": "potomac.edu",
+    "name": "University of the Potomac",
+    "self": true,
+    "cwv": 1,
+    "schema": 6.7
+   },
+   {
+    "domain": "aiuniv.edu",
+    "name": "American InterContinental University",
+    "self": false,
+    "cwv": 1,
+    "schema": 0.0
+   },
+   {
+    "domain": "apus.edu",
+    "name": "American Public University System",
+    "self": false,
+    "cwv": 3,
+    "schema": 6.7
+   },
+   {
+    "domain": "bau.edu",
+    "name": "Bay Atlantic University",
+    "self": false,
+    "cwv": 2,
+    "schema": 40.0
+   },
+   {
+    "domain": "franklin.edu",
+    "name": "Franklin University",
+    "self": false,
+    "cwv": null,
+    "schema": 6.7
+   },
+   {
+    "domain": "strayer.edu",
+    "name": "Strayer University",
+    "self": false,
+    "cwv": null,
+    "schema": 13.3
+   },
+   {
+    "domain": "udc.edu",
+    "name": "University of the District of Columbia",
+    "self": false,
+    "cwv": 2,
+    "schema": 0.0
+   },
+   {
+    "domain": "uopeople.edu",
+    "name": "University of the People",
+    "self": false,
+    "cwv": 1,
+    "schema": 46.7
+   },
+   {
+    "domain": "wust.edu",
+    "name": "Washington University of Science and Technology",
+    "self": false,
+    "cwv": null,
+    "schema": 0.0
+   }
+  ],
+  "striking": [
+   {
+    "keyword": "bsc vs ba",
+    "rank": 13,
+    "volume": 8100,
+    "cpc": 55.94,
+    "variants": 4
+   },
+   {
+    "keyword": "how long is a bachelor's",
+    "rank": 14,
+    "volume": 9900,
+    "cpc": 36.82,
+    "variants": 3
+   },
+   {
+    "keyword": "bba degree",
+    "rank": 16,
+    "volume": 8100,
+    "cpc": 39.1,
+    "variants": 0
+   },
+   {
+    "keyword": "how much do an accountant make",
+    "rank": 15,
+    "volume": 9900,
+    "cpc": 26.53,
+    "variants": 0
+   },
+   {
+    "keyword": "degree definition",
+    "rank": 11,
+    "volume": 9900,
+    "cpc": 23.69,
+    "variants": 0
+   },
+   {
+    "keyword": "doctor of philosophy vs doctorate",
+    "rank": 14,
+    "volume": 9900,
+    "cpc": 20.32,
+    "variants": 1
+   },
+   {
+    "keyword": "average wage of an accountant",
+    "rank": 28,
+    "volume": 6600,
+    "cpc": 29.13,
+    "variants": 0
+   },
+   {
+    "keyword": "academic degrees in order",
+    "rank": 25,
+    "volume": 6600,
+    "cpc": 29.05,
+    "variants": 0
+   },
+   {
+    "keyword": "computer scientist vs computer engineer",
+    "rank": 16,
+    "volume": 5400,
+    "cpc": 34.61,
+    "variants": 1
+   },
+   {
+    "keyword": "how much does an accountant make",
+    "rank": 15,
+    "volume": 5400,
+    "cpc": 31.82,
+    "variants": 1
+   }
+  ]
+ },
+ "competition": {
+  "peers": [
+   {
+    "domain": "potomac.edu",
+    "name": "University of the Potomac",
+    "self": true,
+    "rating": 4.4,
+    "reviews": 156,
+    "keywords": 28089,
+    "traffic": 122936.0,
+    "schema": 6.7,
+    "cwv": 1,
+    "news_7d": null,
+    "negative_share": null
+   },
+   {
+    "domain": "aiuniv.edu",
+    "name": "American InterContinental University",
+    "self": false,
+    "rating": 3.4,
+    "reviews": 226,
+    "keywords": 21091,
+    "traffic": 190766.0,
+    "schema": 0.0,
+    "cwv": 1,
+    "news_7d": 3,
+    "negative_share": 16.6
+   },
+   {
+    "domain": "apus.edu",
+    "name": "American Public University System",
+    "self": false,
+    "rating": 3.6,
+    "reviews": 121,
+    "keywords": 132589,
+    "traffic": 1436754.0,
+    "schema": 6.7,
+    "cwv": 3,
+    "news_7d": 12,
+    "negative_share": 46.5
+   },
+   {
+    "domain": "bau.edu",
+    "name": "Bay Atlantic University",
+    "self": false,
+    "rating": 4.4,
+    "reviews": 77,
+    "keywords": 25881,
+    "traffic": 214923.0,
+    "schema": 40.0,
+    "cwv": 2,
+    "news_7d": 10,
+    "negative_share": 33.5
+   },
+   {
+    "domain": "franklin.edu",
+    "name": "Franklin University",
+    "self": false,
+    "rating": 3.7,
+    "reviews": 131,
+    "keywords": 189233,
+    "traffic": 1464524.0,
+    "schema": 6.7,
+    "cwv": null,
+    "news_7d": 12,
+    "negative_share": 29.3
+   },
+   {
+    "domain": "strayer.edu",
+    "name": "Strayer University",
+    "self": false,
+    "rating": 3.7,
+    "reviews": 204,
+    "keywords": 22119,
+    "traffic": 190632.0,
+    "schema": 13.3,
+    "cwv": null,
+    "news_7d": 2,
+    "negative_share": 21.2
+   },
+   {
+    "domain": "udc.edu",
+    "name": "University of the District of Columbia",
+    "self": false,
+    "rating": 3.8,
+    "reviews": 187,
+    "keywords": 22466,
+    "traffic": 121406.0,
+    "schema": 0.0,
+    "cwv": 2,
+    "news_7d": 11,
+    "negative_share": 37.7
+   },
+   {
+    "domain": "uopeople.edu",
+    "name": "University of the People",
+    "self": false,
+    "rating": 4.8,
+    "reviews": 3231,
+    "keywords": 83377,
+    "traffic": 539200.0,
+    "schema": 46.7,
+    "cwv": 1,
+    "news_7d": 12,
+    "negative_share": 33.5
+   },
+   {
+    "domain": "wust.edu",
+    "name": "Washington University of Science and Technology",
+    "self": false,
+    "rating": 4.6,
+    "reviews": 149,
+    "keywords": 1562,
+    "traffic": 14259.0,
+    "schema": 0.0,
+    "cwv": null,
+    "news_7d": 10,
+    "negative_share": 18.5
+   }
+  ],
+  "rating_history": {
+   "potomac.edu": [
+    {
+     "week": "2026-06-29",
+     "rating": 4.4,
+     "reviews": 148
+    },
+    {
+     "week": "2026-07-06",
+     "rating": 4.4,
+     "reviews": 148
+    },
+    {
+     "week": "2026-07-13",
+     "rating": 4.4,
+     "reviews": 148
+    },
+    {
+     "week": "2026-07-20",
+     "rating": 4.4,
+     "reviews": 148
+    },
+    {
+     "week": "2026-07-27",
+     "rating": 4.4,
+     "reviews": 148
+    },
+    {
+     "week": "2026-08-03",
+     "rating": 4.4,
+     "reviews": 149
+    },
+    {
+     "week": "2026-08-10",
+     "rating": 4.4,
+     "reviews": 149
+    },
+    {
+     "week": "2026-08-24",
+     "rating": 4.4,
+     "reviews": 155
+    },
+    {
+     "week": "2026-09-07",
+     "rating": 4.4,
+     "reviews": 156
+    }
+   ],
+   "aiuniv.edu": [
+    {
+     "week": "2026-06-29",
+     "rating": 3.4,
+     "reviews": 215
+    },
+    {
+     "week": "2026-07-06",
+     "rating": 3.4,
+     "reviews": 216
+    },
+    {
+     "week": "2026-07-13",
+     "rating": 3.4,
+     "reviews": 216
+    },
+    {
+     "week": "2026-07-20",
+     "rating": 3.4,
+     "reviews": 217
+    },
+    {
+     "week": "2026-07-27",
+     "rating": 3.4,
+     "reviews": 217
+    },
+    {
+     "week": "2026-08-03",
+     "rating": 3.4,
+     "reviews": 218
+    },
+    {
+     "week": "2026-08-10",
+     "rating": 3.4,
+     "reviews": 218
+    },
+    {
+     "week": "2026-08-24",
+     "rating": 3.4,
+     "reviews": 226
+    },
+    {
+     "week": "2026-09-07",
+     "rating": 3.4,
+     "reviews": 226
+    }
+   ],
+   "apus.edu": [
+    {
+     "week": "2026-06-29",
+     "rating": 3.6,
+     "reviews": 120
+    },
+    {
+     "week": "2026-07-06",
+     "rating": 3.6,
+     "reviews": 120
+    },
+    {
+     "week": "2026-07-13",
+     "rating": 3.6,
+     "reviews": 120
+    },
+    {
+     "week": "2026-07-20",
+     "rating": 3.6,
+     "reviews": 120
+    },
+    {
+     "week": "2026-07-27",
+     "rating": 3.6,
+     "reviews": 120
+    },
+    {
+     "week": "2026-08-03",
+     "rating": 3.6,
+     "reviews": 120
+    },
+    {
+     "week": "2026-08-10",
+     "rating": 3.6,
+     "reviews": 120
+    },
+    {
+     "week": "2026-08-24",
+     "rating": 3.6,
+     "reviews": 120
+    },
+    {
+     "week": "2026-09-07",
+     "rating": 3.6,
+     "reviews": 121
+    }
+   ],
+   "bau.edu": [
+    {
+     "week": "2026-06-29",
+     "rating": 4.4,
+     "reviews": 74
+    },
+    {
+     "week": "2026-07-06",
+     "rating": 4.4,
+     "reviews": 74
+    },
+    {
+     "week": "2026-07-13",
+     "rating": 4.4,
+     "reviews": 74
+    },
+    {
+     "week": "2026-07-20",
+     "rating": 4.4,
+     "reviews": 74
+    },
+    {
+     "week": "2026-07-27",
+     "rating": 4.4,
+     "reviews": 75
+    },
+    {
+     "week": "2026-08-03",
+     "rating": 4.4,
+     "reviews": 75
+    },
+    {
+     "week": "2026-08-10",
+     "rating": 4.4,
+     "reviews": 76
+    },
+    {
+     "week": "2026-08-24",
+     "rating": 4.4,
+     "reviews": 77
+    },
+    {
+     "week": "2026-09-07",
+     "rating": 4.4,
+     "reviews": 77
+    }
+   ],
+   "franklin.edu": [
+    {
+     "week": "2026-06-29",
+     "rating": 3.6,
+     "reviews": 125
+    },
+    {
+     "week": "2026-07-06",
+     "rating": 3.6,
+     "reviews": 125
+    },
+    {
+     "week": "2026-07-13",
+     "rating": 3.7,
+     "reviews": 124
+    },
+    {
+     "week": "2026-07-20",
+     "rating": 3.7,
+     "reviews": 125
+    },
+    {
+     "week": "2026-07-27",
+     "rating": 3.7,
+     "reviews": 127
+    },
+    {
+     "week": "2026-08-03",
+     "rating": 3.7,
+     "reviews": 127
+    },
+    {
+     "week": "2026-08-10",
+     "rating": 3.7,
+     "reviews": 128
+    },
+    {
+     "week": "2026-08-24",
+     "rating": 3.7,
+     "reviews": 130
+    },
+    {
+     "week": "2026-09-07",
+     "rating": 3.7,
+     "reviews": 131
+    }
+   ],
+   "strayer.edu": [
+    {
+     "week": "2026-06-29",
+     "rating": 3.7,
+     "reviews": 26
+    },
+    {
+     "week": "2026-07-06",
+     "rating": 4.9,
+     "reviews": 11
+    },
+    {
+     "week": "2026-07-13",
+     "rating": 3.3,
+     "reviews": 23
+    },
+    {
+     "week": "2026-07-20",
+     "rating": 3.6,
+     "reviews": 27
+    },
+    {
+     "week": "2026-07-27",
+     "rating": 3.3,
+     "reviews": 24
+    },
+    {
+     "week": "2026-08-03",
+     "rating": 3.6,
+     "reviews": 186
+    },
+    {
+     "week": "2026-08-10",
+     "rating": 3.6,
+     "reviews": 202
+    },
+    {
+     "week": "2026-08-24",
+     "rating": 3.6,
+     "reviews": 202
+    },
+    {
+     "week": "2026-09-07",
+     "rating": 3.7,
+     "reviews": 204
+    }
+   ],
+   "udc.edu": [
+    {
+     "week": "2026-06-29",
+     "rating": 3.8,
+     "reviews": 177
+    },
+    {
+     "week": "2026-07-06",
+     "rating": 3.8,
+     "reviews": 177
+    },
+    {
+     "week": "2026-07-13",
+     "rating": 3.8,
+     "reviews": 179
+    },
+    {
+     "week": "2026-07-20",
+     "rating": 3.8,
+     "reviews": 179
+    },
+    {
+     "week": "2026-07-27",
+     "rating": 3.8,
+     "reviews": 180
+    },
+    {
+     "week": "2026-08-03",
+     "rating": null,
+     "reviews": null
+    },
+    {
+     "week": "2026-08-10",
+     "rating": 3.8,
+     "reviews": 182
+    },
+    {
+     "week": "2026-08-24",
+     "rating": 3.8,
+     "reviews": 186
+    },
+    {
+     "week": "2026-09-07",
+     "rating": 3.8,
+     "reviews": 187
+    }
+   ],
+   "uopeople.edu": [
+    {
+     "week": "2026-06-29",
+     "rating": 4.8,
+     "reviews": 3213
+    },
+    {
+     "week": "2026-07-06",
+     "rating": 4.8,
+     "reviews": 3217
+    },
+    {
+     "week": "2026-07-13",
+     "rating": 4.8,
+     "reviews": 3225
+    },
+    {
+     "week": "2026-07-20",
+     "rating": 4.8,
+     "reviews": 3222
+    },
+    {
+     "week": "2026-07-27",
+     "rating": 4.8,
+     "reviews": 3222
+    },
+    {
+     "week": "2026-08-03",
+     "rating": 4.8,
+     "reviews": 3223
+    },
+    {
+     "week": "2026-08-10",
+     "rating": 4.8,
+     "reviews": 3224
+    },
+    {
+     "week": "2026-08-24",
+     "rating": 4.8,
+     "reviews": 3221
+    },
+    {
+     "week": "2026-09-07",
+     "rating": 4.8,
+     "reviews": 3231
+    }
+   ],
+   "wust.edu": [
+    {
+     "week": "2026-06-29",
+     "rating": 4.6,
+     "reviews": 145
+    },
+    {
+     "week": "2026-07-06",
+     "rating": 4.6,
+     "reviews": 145
+    },
+    {
+     "week": "2026-07-13",
+     "rating": 4.6,
+     "reviews": 145
+    },
+    {
+     "week": "2026-07-20",
+     "rating": 4.6,
+     "reviews": 145
+    },
+    {
+     "week": "2026-07-27",
+     "rating": 4.6,
+     "reviews": 145
+    },
+    {
+     "week": "2026-08-03",
+     "rating": 4.6,
+     "reviews": 147
+    },
+    {
+     "week": "2026-08-10",
+     "rating": 4.6,
+     "reviews": 148
+    },
+    {
+     "week": "2026-08-24",
+     "rating": 4.6,
+     "reviews": 149
+    },
+    {
+     "week": "2026-09-07",
+     "rating": 4.6,
+     "reviews": 149
+    }
+   ]
+  },
+  "emerging": [
+   {
+    "domain": "snhu.edu",
+    "shared_keywords": 8975,
+    "avg_position": 13.85
+   },
+   {
+    "domain": "nu.edu",
+    "shared_keywords": 5926,
+    "avg_position": 26.85
+   }
+  ],
+  "overlap": []
+ },
+ "provenance": {
+  "marketing_agent_run_id": "45921b48-3f0b-4310-b112-347930e412ed",
+  "marketing_agent_prev_week": "2026-08-24",
+  "skill_version": "0.3.0",
+  "config": "C:\\Projects\\axia-tenant-potomac\\skills\\marketing-dashboard\\config.yaml",
+  "promoted_forums": [
+   [
+    "reddit:1vcr0u9",
+    "University of the Potomac"
+   ],
+   [
+    "reddit:1tt94qk",
+    "UOTP"
+   ],
+   [
+    "reddit:1t1bf00",
+    "University of the Potomac"
+   ],
+   [
+    "reddit:1szxtdu",
+    "University of the Potomac"
+   ],
+   [
+    "reddit:1sxne5z",
+    "University of the Potomac"
+   ],
+   [
+    "reddit:1saps0g",
+    "University of the Potomac"
+   ],
+   [
+    "reddit:1jsuhyu",
+    "University of Potomac"
+   ],
+   [
+    "reddit:1h5oflh",
+    "University of the Potomac"
+   ],
+   [
+    "reddit:1es9stj",
+    "university of the Potomac"
+   ],
+   [
+    "reddit:1v0c2sw",
+    "University of the Potomac"
+   ],
+   [
+    "reddit:1uxtzm4",
+    "University of the Potomac"
+   ],
+   [
+    "reddit:14h56k5",
+    "University of the Potomac"
+   ],
+   [
+    "reddit:1ux0gp6",
+    "University of the Potomac"
+   ],
+   [
+    "reddit:1uvt2ry",
+    "University of the Potomac"
+   ],
+   [
+    "reddit:1ut5rzm",
+    "University of the Potomac"
+   ],
+   [
+    "reddit:1uocwpd",
+    "University of the Potomac"
+   ],
+   [
+    "reddit:1jnzzgd",
+    "University of the Potomac"
+   ]
+  ],
+  "coverage_states": {
+   "brand_serp": "measured",
+   "content_mentions": "measured",
+   "content_timeline": "measured",
+   "curation": "nothing_found",
+   "emerging": "measured",
+   "entity_aliases": "measured",
+   "google_places": "measured",
+   "google_reviews_full": "measured",
+   "google_reviews_stable": "measured",
+   "institution_profile": "measured",
+   "keyword_gaps": "measured",
+   "link_dating": "not_covered_yet",
+   "listing_presence": "measured",
+   "news_serp": "measured",
+   "niche": "not_covered_yet",
+   "peer_news": "measured",
+   "peer_sentiment": "measured",
+   "peer_set": "measured",
+   "platform_registry": "measured",
+   "press_search": "measured",
+   "probes": "measured",
+   "reddit": "measured",
+   "rmp": "measured",
+   "striking_distance": "measured",
+   "traffic": "measured",
+   "trustpilot": "nothing_found"
+  },
+  "decayed_findings": [],
+  "previous_archive": null
+ }
+}

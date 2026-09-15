@@ -597,6 +597,25 @@ def create_session(*, auth_type: str | None = None, username: str | None = None,
     return f"{token}.{sig}"
 
 
+def session_username(handler) -> str | None:
+    """Who this request is, when the session knows. None when it does not.
+
+    Sessions predating the OIDC username (and every password/trusted-auth one)
+    are stored as a bare expiry float, so this returns None for them rather than
+    guessing - an unattributed event is honest, an invented name is not.
+    """
+    cookie = parse_cookie(handler)
+    if not cookie or '.' not in cookie:
+        return None
+    token = cookie.rsplit('.', 1)[0]
+    with _SESSIONS_LOCK:
+        rec = _sessions.get(token)
+    if isinstance(rec, dict):
+        name = rec.get("username")
+        return name if isinstance(name, str) and name else None
+    return None
+
+
 def _prune_expired_sessions():
     """Remove all expired session entries to prevent unbounded memory growth."""
     now = time.time()

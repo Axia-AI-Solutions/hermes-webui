@@ -11951,6 +11951,12 @@ def handle_get(handler, parsed) -> bool:
     if parsed.path == "/api/client-dashboard":
         from api.client_mode import handle_dashboard_list as _dash_list
         return _dash_list(handler)
+    if parsed.path == "/api/plan":
+        from api.client_mode import handle_plan_get as _plan_get
+        return _plan_get(handler)
+    if parsed.path == "/api/connections":
+        from api.client_mode import handle_connections_get as _conn_get
+        return _conn_get(handler)
 
     if parsed.path == "/share" or parsed.path.startswith("/share/"):
         share_path = (Path(__file__).parent.parent / "static" / "share.html").resolve()
@@ -12035,7 +12041,9 @@ def handle_get(handler, parsed) -> bool:
             return j(handler, {"error": str(exc)}, status=404)
         except OIDCAuthError as exc:
             return j(handler, {"error": str(exc)}, status=exc.status_code)
-        cookie_val = create_session()
+        # The email the identity provider vouched for IS who is clicking in the app: the plan records
+        # a person by name, so a checkbox has to be attributable to one. Nothing else reads it.
+        cookie_val = create_session(auth_type="oidc", username=(str(result.get("email") or "").strip() or None))
         handler.send_response(302)
         handler.send_header(
             "Location",
@@ -13799,6 +13807,18 @@ def handle_post(handler, parsed) -> bool:
             diag.stage("csp_report")
         try:
             return _handle_csp_report(handler)
+        finally:
+            if diag:
+                diag.finish()
+    # Axia client mode: a person ticking a box in the Plan view. The event is
+    # attributed to the OIDC email on their session, not to "the client".
+    if parsed.path == "/api/plan/events":
+        from api.auth import session_username
+        from api.client_mode import handle_plan_event_post
+        if diag:
+            diag.stage("plan_event")
+        try:
+            return handle_plan_event_post(handler, by=session_username(handler))
         finally:
             if diag:
                 diag.finish()

@@ -127,7 +127,8 @@
   function _view(){ return document.documentElement.dataset.clientView || 'chat'; }
 
   function _clientModeOnPanel(name){
-    document.documentElement.dataset.clientView = name === 'clientdash' ? 'dashboard' : 'chat';
+    // The Plan view sits beside the dashboard: same chrome, same drawer behaviour.
+    document.documentElement.dataset.clientView = (name === 'clientdash' || name === 'clientplan') ? 'dashboard' : 'chat';
     _placeChat();
     refreshDrawer();
   }
@@ -273,7 +274,14 @@
   // ── 3. Bridge: dashboard → agent ────────────────────────────────────────────
   var MSG_TYPE = 'axia.dashboard.action';
   var CONTEXT_CAPS = {item_id: 200, title: 200, section: 100};
-  var CONTEXT_KINDS = {finding: 1, action: 1, cta: 1};
+  var CONTEXT_KINDS = {finding: 1, action: 1, cta: 1, task: 1};
+  var TASK_MSG_TYPE = 'axia.dashboard.task';
+  var CONNECT_MSG_TYPE = 'axia.dashboard.connect';
+  // The SAME literal as api/client_mode.py TASK_ID_RE; a test asserts the two match,
+  // so the bridge and the endpoint cannot drift into accepting different ids.
+  var TASK_ID_RE = /^task\.[a-z0-9_.-]{1,120}$/;
+  var TASK_STATUSES = {done: 1, open: 1};
+  var CONNECT_PROVIDERS = {ga4: 'Google Analytics', gsc: 'Search Console'};
   var WEEK_RE = /^\d{4}-\d{2}-\d{2}$/;
   var PROMPT_MAX = 4000;
 
@@ -286,8 +294,18 @@
     if(ev.origin !== 'null' && ev.origin !== ownOrigin) return {ok: false, reason: 'origin'};
     var d = ev.data;
     if(!d || typeof d !== 'object') return {ok: false, reason: 'shape'};
-    if(d.type !== MSG_TYPE) return {ok: false, reason: 'type'};
     if(d.v !== 1) return {ok: false, reason: 'version'};
+    if(d.type === TASK_MSG_TYPE){
+      var tid = typeof d.task_id === 'string' ? d.task_id : '';
+      if(!TASK_ID_RE.test(tid)) return {ok: false, reason: 'task_id'};
+      if(!TASK_STATUSES[d.status]) return {ok: false, reason: 'status'};
+      return {ok: true, kind: 'task', task_id: tid, status: d.status};
+    }
+    if(d.type === CONNECT_MSG_TYPE){
+      if(!CONNECT_PROVIDERS[d.provider]) return {ok: false, reason: 'provider'};
+      return {ok: true, kind: 'connect', provider: d.provider};
+    }
+    if(d.type !== MSG_TYPE) return {ok: false, reason: 'type'};
     var prompt = typeof d.prompt === 'string' ? d.prompt.trim() : '';
     if(!prompt || prompt.length > PROMPT_MAX) return {ok: false, reason: 'prompt'};
     var raw = (d.context && typeof d.context === 'object') ? d.context : {};
@@ -345,6 +363,14 @@
       }
       return;
     }
+    if(r.kind === 'task'){
+      postPlanEvent(r.task_id, r.status).then(function(){
+        if(el('mainClientplan')) loadClientPlan();
+        postToDashboard({type: 'axia.shell.task-updated', v: 1, task_id: r.task_id, status: r.status});
+      });
+      return;
+    }
+    if(r.kind === 'connect'){ openConnectModal(r.provider); return; }
     runDashboardAction(r.prompt, r.context);
   }
 
@@ -399,6 +425,8 @@
       new MutationObserver(_scheduleRefresh).observe(list, {childList: true, subtree: true});
     }
     window.addEventListener('message', _onWindowMessage);
+    _wirePlanTabs();
+    _wireConnectModal();
   }
 
   function _start(){
@@ -413,7 +441,245 @@
     else document.documentElement.dataset.clientView = 'dashboard';
   }
 
+  // -- 5. The plan ------------------------------------------------------------
+  //
+  // `plan.state.json` is DERIVED by the plan skill's tick; this view renders it and
+  // writes exactly one thing back: a person ticking a box, through POST /api/plan/events.
+  // An inference the agent made shows as "inferred, confirm" and leaves the box unticked:
+  // the shell never turns a guess into a completion.
+
+  var _planTab = 'this_week';
+  var _plan = null;
+
+  async function postPlanEvent(taskId, status, note){
+    var body = {task_id: taskId, status: status};
+    if(note) body.note = note;
+    try{
+      await api('/api/plan/events', {method: 'POST', body: JSON.stringify(body)});
+      return true;
+    }catch(e){
+      try{ console.warn('[axia-plan] event failed', e); }catch(_){}
+      if(typeof showToast === 'function') showToast('Could not record that. Try again.', 3000);
+      return false;
+    }
+  }
+
+  async function loadClientPlan(){
+    var empty = el('clientplanEmpty');
+    var objectives = el('clientplanObjectives');
+    var tasks = el('clientplanTasks');
+    if(!objectives || !tasks) return;
+    try{
+      var r = await fetch('api/plan', {credentials: 'same-origin', cache: 'no-store'});
+      if(!r.ok) throw new Error('no plan');
+      _plan = await r.json();
+    }catch(e){
+      _plan = null;
+      if(empty) empty.hidden = false;
+      objectives.textContent = '';
+      tasks.textContent = '';
+      return;
+    }
+    if(empty) empty.hidden = true;
+    var rev = el('clientplanRevision');
+    if(rev) rev.textContent = _plan.revision ? ('Revised ' + _plan.revision) : '';
+    _renderPlanObjectives(objectives);
+    _renderPlanTasks(tasks);
+  }
+
+  function _chip(text, cls){
+    var s = document.createElement('span');
+    s.className = 'plan-chip' + (cls ? ' ' + cls : '');
+    s.textContent = text;
+    return s;
+  }
+
+  function _renderPlanObjectives(host){
+    host.textContent = '';
+    (_plan.objectives || []).forEach(function(o){
+      var row = document.createElement('div');
+      row.className = 'plan-objective';
+      var h = document.createElement('h4');
+      h.textContent = o.title || o.id;
+      row.appendChild(h);
+      var line = document.createElement('p');
+      line.className = 'plan-series';
+      var base = (o.baseline && o.baseline.value !== undefined && o.baseline.value !== null) ? o.baseline.value : '?';
+      var cur = (o.current === null || o.current === undefined) ? 'not measured' : o.current;
+      var tgt = (o.target && o.target.value !== undefined) ? o.target.value : '?';
+      line.textContent = String(o.series || '') + ': ' + base + ' -> ' + cur + ' -> ' + tgt;
+      row.appendChild(line);
+      if(o.flag === 'revisit') row.appendChild(_chip('revisit', 'plan-chip-warn'));
+      host.appendChild(row);
+    });
+  }
+
+  function _taskInTab(t){
+    if(_planTab === 'done') return t.resolved_status === 'done' || t.resolved_status === 'closed_by_data';
+    if(t.resolved_status === 'done' || t.resolved_status === 'closed_by_data') return false;
+    if(t.status === 'retired') return false;
+    if(_planTab === 'all_open') return true;
+    return (_plan.this_week || []).indexOf(t.id) >= 0;
+  }
+
+  function _renderPlanTasks(host){
+    host.textContent = '';
+    var rows = (_plan.tasks || []).filter(_taskInTab);
+    if(!rows.length){
+      var none = document.createElement('p');
+      none.className = 'plan-none';
+      none.textContent = _planTab === 'done' ? 'Nothing closed yet.' : 'Nothing on this list.';
+      host.appendChild(none);
+      return;
+    }
+    rows.forEach(function(t){
+      var row = document.createElement('div');
+      row.className = 'plan-task';
+
+      var box = document.createElement('input');
+      box.type = 'checkbox';
+      box.className = 'plan-check';
+      box.checked = t.resolved_status === 'done' || t.resolved_status === 'closed_by_data';
+      box.disabled = t.resolved_status === 'closed_by_data';   // the data closed it; a click cannot reopen it
+      box.setAttribute('aria-label', t.title || t.id);
+      box.addEventListener('change', function(){
+        postPlanEvent(t.id, box.checked ? 'done' : 'open').then(loadClientPlan);
+      });
+      row.appendChild(box);
+
+      var mid = document.createElement('div');
+      mid.className = 'plan-task-body';
+      var h = document.createElement('h4');
+      h.textContent = t.title || t.id;
+      mid.appendChild(h);
+      var chips = document.createElement('div');
+      chips.className = 'plan-chips';
+      if(t.overdue) chips.appendChild(_chip('overdue', 'plan-chip-warn'));
+      if(t.age_weeks >= 1 && t.resolved_status === 'open'){
+        chips.appendChild(_chip('open ' + t.age_weeks + (t.age_weeks === 1 ? ' week' : ' weeks')));
+      }
+      if(t.inferred) chips.appendChild(_chip('inferred, confirm', 'plan-chip-warn'));
+      if(t.resolved_status === 'closed_by_data') chips.appendChild(_chip('closed by the data'));
+      if(t.owner) chips.appendChild(_chip(t.owner));
+      mid.appendChild(chips);
+      row.appendChild(mid);
+
+      var btn = document.createElement('button');
+      btn.className = 'btn plan-cta';
+      btn.textContent = t.cta || 'Ask the agent';
+      btn.addEventListener('click', function(){
+        runDashboardAction(t.prompt || t.title, {
+          item_id: t.id, title: t.title, kind: 'task', section: 'plan', week: _plan.week
+        });
+      });
+      row.appendChild(btn);
+      host.appendChild(row);
+    });
+  }
+
+  function _wirePlanTabs(){
+    var tabs = el('clientplanTabs');
+    if(!tabs) return;
+    tabs.addEventListener('click', function(ev){
+      var b = ev.target && ev.target.closest ? ev.target.closest('[data-plan-tab]') : null;
+      if(!b) return;
+      _planTab = b.getAttribute('data-plan-tab');
+      Array.prototype.forEach.call(tabs.querySelectorAll('[data-plan-tab]'), function(x){
+        x.classList.toggle('is-active', x === b);
+      });
+      var host = el('clientplanTasks');
+      if(host && _plan) _renderPlanTasks(host);
+    });
+  }
+
+  // -- 6. Connect: the steps, never the key ------------------------------------
+  //
+  // The service account lives on the HOST, outside this process and outside the
+  // agent's container. All the app does is show the email and where to paste it.
+
+  var CONNECT_STEPS = {
+    ga4: ['Open Google Analytics and go to Admin, then Property access management.',
+          'Click Add users, paste the email below, and choose the role Viewer.',
+          'Uncheck "Notify new users by email", then click Add.'],
+    gsc: ['Open Search Console and go to Settings, then Users and permissions.',
+          'Click Add user and paste the email below.',
+          'Choose the permission Full, then click Add.']
+  };
+
+  async function openConnectModal(provider){
+    var modal = el('connectModal');
+    if(!modal) return;
+    var name = CONNECT_PROVIDERS[provider] || provider;
+    var title = el('connectModalTitle');
+    if(title) title.textContent = 'Connect ' + name;
+    var body = el('connectModalBody');
+    if(body) body.textContent = '';
+
+    var status = null;
+    try{
+      var r = await fetch('api/connections', {credentials: 'same-origin', cache: 'no-store'});
+      if(r.ok) status = await r.json();
+    }catch(e){ status = null; }
+    var prov = status && status.providers ? status.providers[provider] : null;
+    var email = status && status.sa_email ? status.sa_email : '';
+
+    if(!status || !prov || prov.state === 'not_provisioned' || !email){
+      var p = document.createElement('p');
+      p.textContent = 'Axia is preparing your connection. The steps appear here once it is ready.';
+      if(body) body.appendChild(p);
+      modal.hidden = false;
+      return;
+    }
+
+    var ol = document.createElement('ol');
+    (CONNECT_STEPS[provider] || []).forEach(function(s){
+      var li = document.createElement('li');
+      li.textContent = s;
+      ol.appendChild(li);
+    });
+    if(body) body.appendChild(ol);
+
+    var mail = document.createElement('div');
+    mail.className = 'connect-email';
+    var code = document.createElement('code');
+    code.textContent = email;
+    mail.appendChild(code);
+    var copy = document.createElement('button');
+    copy.className = 'btn ghost';
+    copy.textContent = 'Copy';
+    copy.addEventListener('click', function(){
+      try{ navigator.clipboard.writeText(email); }catch(e){}
+      copy.textContent = 'Copied';
+    });
+    mail.appendChild(copy);
+    if(body) body.appendChild(mail);
+
+    var done = document.createElement('button');
+    done.className = 'btn primary';
+    done.textContent = "I've added it";
+    done.addEventListener('click', function(){
+      modal.hidden = true;
+      runDashboardAction('I added ' + email + ' to ' + name + '. Please confirm when you can see it.',
+        {kind: 'cta', title: 'Connect ' + name, section: 'channels', week: (_plan && _plan.week) || ''});
+    });
+    if(body) body.appendChild(done);
+    modal.hidden = false;
+  }
+
+  function _wireConnectModal(){
+    var modal = el('connectModal');
+    if(!modal) return;
+    modal.addEventListener('click', function(ev){
+      if(ev.target === modal || (ev.target && ev.target.hasAttribute && ev.target.hasAttribute('data-connect-close'))){
+        modal.hidden = true;
+      }
+    });
+  }
+
   window.loadClientDashboard = loadClientDashboard;
+  window.loadClientPlan = loadClientPlan;
+  window.postPlanEvent = postPlanEvent;
+  window.openConnectModal = openConnectModal;
   window.openClientDashboardPage = _show;
   window._clientModeOnPanel = _clientModeOnPanel;
   window.setAgentDrawerState = setDrawerState;

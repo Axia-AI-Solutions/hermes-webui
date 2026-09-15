@@ -474,6 +474,20 @@ def test_compose_announcement_variants():
     assert title4 == "This week's dashboard" and "ready" in text4.lower()
 
 
+def test_compose_announcement_on_v2_dashboard_json():
+    """The v2 contract (no `ai_visibility` key) needs no announcement change.
+
+    `compose_announcement` reads `week_start` and `overview.findings` and nothing
+    else; this feeds it a real dashboard.json built by the tenant skill after AI
+    visibility left it (2026-09-15).
+    """
+    data = _json.loads((REPO / "tests" / "fixtures" / "marketing_dashboard_v2.json").read_text(encoding="utf-8"))
+    assert "ai_visibility" not in data and data["contract_version"] == "2.0"
+    title, text = cm.compose_announcement(data, "Marketing Agent")
+    assert title.startswith("Week of")
+    assert "Your dashboard for" in text
+
+
 def test_announce_with_unreadable_json_still_announces_generically(dash):
     (dash / "dashboard.json").write_text("{not json", encoding="utf-8")
     c = _Creator()
