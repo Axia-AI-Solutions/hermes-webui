@@ -180,14 +180,79 @@ def test_plan_event_post_without_a_session_is_attributed_to_client(plan):
     assert e["by"] == "client"
 
 
-def test_plan_family_is_post_only():
-    """`GET /api/plan` served the Plan view and went with it. A live endpoint with
-    no consumer is surface area on a client-facing box, so the family narrowed
-    rather than kept a door nobody walks through."""
+def test_plan_family_reads_and_writes_but_never_deletes():
+    """GET came back on 2026-09-16 with a consumer: the published page is frozen
+    HTML and cannot know what was closed after it was written, so on load it asks.
+    The Plan VIEW's `handle_plan_get` stays gone - what returned is narrower."""
     assert cm.client_mode_allows("POST", "/api/plan/events") is True
-    assert cm.client_mode_allows("GET", "/api/plan") is False
+    assert cm.client_mode_allows("GET", "/api/plan/resolved") is True
     assert cm.client_mode_allows("DELETE", "/api/plan/events") is False
     assert not hasattr(cm, "handle_plan_get")
+
+
+def _resolved(plan):
+    h = FakeHandler("GET", path="/api/plan/resolved")
+    cm.handle_plan_resolved_get(h, plan)
+    return h
+
+
+def test_plan_resolved_returns_what_a_person_or_the_data_closed(plan):
+    state = json.loads((plan / "plan.state.json").read_text(encoding="utf-8"))
+    state["tasks"] = [
+        dict(state["tasks"][0], id="task.rule.press_pitch", resolved_status="done"),
+        dict(state["tasks"][0], id="task.rule.spam_page", resolved_status="closed_by_data"),
+    ]
+    (plan / "plan.state.json").write_text(json.dumps(state), encoding="utf-8")
+    body = _resolved(plan).body_json()
+    assert body["resolved"] == {"task.rule.press_pitch": "done",
+                                "task.rule.spam_page": "closed_by_data"}
+    assert body["week"] == "2026-09-07"
+
+
+def test_plan_resolved_never_closes_a_task_on_the_agents_guess(plan):
+    """An `inferred_done` is the agent saying it thinks the work happened. The page
+    greys a button out on this answer, so admitting an inference here would report
+    somebody's work as done on nobody's word, and stop asking her about it.
+
+    An inference reaches this file two ways and BOTH are refused, because the first
+    control written for this test could not fail: the tick records a guess as
+    `resolved_status: "open"` with `inferred` set, so admitting "inferred_done" to
+    CLOSED_STATUSES changed nothing and the test stayed green through the very
+    mutation it existed to catch. So: the handler must key on `resolved_status`
+    alone (arm 1), and "inferred_done" must not be a closing status even if a
+    later tick starts writing it there (arm 2).
+
+    The last arm is the control against reading an empty plan: the SAME task
+    returns itself once a person's event resolved it."""
+    state = json.loads((plan / "plan.state.json").read_text(encoding="utf-8"))
+    guess = dict(state["tasks"][0], resolved_status="open", inferred="inferred_done")
+    (plan / "plan.state.json").write_text(json.dumps(dict(state, tasks=[guess])), encoding="utf-8")
+    assert _resolved(plan).body_json()["resolved"] == {}
+
+    (plan / "plan.state.json").write_text(
+        json.dumps(dict(state, tasks=[dict(guess, resolved_status="inferred_done")])), encoding="utf-8")
+    assert _resolved(plan).body_json()["resolved"] == {}
+
+    (plan / "plan.state.json").write_text(
+        json.dumps(dict(state, tasks=[dict(guess, resolved_status="done")])), encoding="utf-8")
+    assert _resolved(plan).body_json()["resolved"] == {"task.rule.press_pitch": "done"}
+
+
+def test_plan_resolved_404s_before_the_first_tick(tmp_path):
+    h = FakeHandler("GET", path="/api/plan/resolved")
+    cm.handle_plan_resolved_get(h, tmp_path / "nothing")
+    assert h.status == 404
+
+
+def test_plan_resolved_drops_a_task_id_the_page_could_not_address(plan):
+    """The id is interpolated into a `[data-task="..."]` selector on the page. It
+    already matched TASK_ID_RE when it was written, but the state file is not this
+    process's to trust, so the same pattern gates the way out."""
+    state = json.loads((plan / "plan.state.json").read_text(encoding="utf-8"))
+    state["tasks"] = [dict(state["tasks"][0], id='task."] , [data-task', resolved_status="done"),
+                      dict(state["tasks"][0], id="task.ok", resolved_status="done")]
+    (plan / "plan.state.json").write_text(json.dumps(state), encoding="utf-8")
+    assert _resolved(plan).body_json()["resolved"] == {"task.ok": "done"}
 
 
 # ── 3. one pattern, two sides ───────────────────────────────────────────────
@@ -270,6 +335,10 @@ def test_announcement_carries_plan_line():
     _, text = cm.compose_announcement(DASH, "Marketing Agent", state)
     assert "Your plan this week: 3 tasks, 1 overdue, 1 I think you did" in text
     assert text.index("Your plan this week") < text.index("Open the Dashboard tab")
+    # It used to end "confirm them in Plan" - a tab that was deleted on 2026-09-16.
+    # An instruction naming a place that does not exist is worse than no instruction.
+    assert "in Plan" not in text
+    assert "confirm them there" in text
 
 
 def test_announcement_plan_line_is_singular_for_one_task():

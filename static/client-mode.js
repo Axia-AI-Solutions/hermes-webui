@@ -276,6 +276,9 @@
   var CONTEXT_KINDS = {finding: 1, action: 1, cta: 1, task: 1};
   var TASK_MSG_TYPE = 'axia.dashboard.task';
   var CONNECT_MSG_TYPE = 'axia.dashboard.connect';
+  // The page says it has loaded. It is frozen HTML and cannot know which of its
+  // tasks were closed after it was published, so it asks; we answer.
+  var READY_MSG_TYPE = 'axia.dashboard.ready';
   // The SAME literal as api/client_mode.py TASK_ID_RE; a test asserts the two match,
   // so the bridge and the endpoint cannot drift into accepting different ids.
   var TASK_ID_RE = /^task\.[a-z0-9_.-]{1,120}$/;
@@ -299,6 +302,9 @@
       if(!TASK_ID_RE.test(tid)) return {ok: false, reason: 'task_id'};
       if(!TASK_STATUSES[d.status]) return {ok: false, reason: 'status'};
       return {ok: true, kind: 'task', task_id: tid, status: d.status};
+    }
+    if(d.type === READY_MSG_TYPE){
+      return {ok: true, kind: 'ready'};
     }
     if(d.type === CONNECT_MSG_TYPE){
       if(!CONNECT_PROVIDERS[d.provider]) return {ok: false, reason: 'provider'};
@@ -368,6 +374,7 @@
       });
       return;
     }
+    if(r.kind === 'ready'){ sendPlanStateToDashboard(); return; }
     if(r.kind === 'connect'){ openConnectModal(r.provider); return; }
     runDashboardAction(r.prompt, r.context);
   }
@@ -444,6 +451,22 @@
   // "Recommended actions", and the plan now lives inside the weekly page. What
   // survives is this: the page's `Mark done` posts one event, attributed to the
   // session's email by the sidecar.
+
+  // The answer to 'ready'. Fail-soft on every rung: no plan yet (404), a box with
+  // no plan skill, a network blip - the page then shows exactly what it was
+  // published with, which is a week-old truth rather than a wrong one.
+  async function sendPlanStateToDashboard(){
+    var state;
+    try{
+      state = await api('/api/plan/resolved');
+    }catch(e){
+      try{ console.debug('[axia-plan] no resolved state', e); }catch(_){}
+      return;
+    }
+    var resolved = (state && typeof state.resolved === 'object' && state.resolved) || null;
+    if(!resolved) return;
+    postToDashboard({type: 'axia.shell.plan-state', v: 1, resolved: resolved});
+  }
 
   async function postPlanEvent(taskId, status, note){
     var body = {task_id: taskId, status: status};

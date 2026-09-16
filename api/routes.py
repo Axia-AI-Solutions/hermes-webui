@@ -11954,6 +11954,11 @@ def handle_get(handler, parsed) -> bool:
     if parsed.path == "/api/connections":
         from api.client_mode import handle_connections_get as _conn_get
         return _conn_get(handler)
+    # The weekly page is frozen HTML; this is how a reloaded one learns which of
+    # its tasks somebody already closed. See handle_plan_resolved_get.
+    if parsed.path == "/api/plan/resolved":
+        from api.client_mode import handle_plan_resolved_get as _plan_resolved
+        return _plan_resolved(handler)
 
     if parsed.path == "/share" or parsed.path.startswith("/share/"):
         share_path = (Path(__file__).parent.parent / "static" / "share.html").resolve()

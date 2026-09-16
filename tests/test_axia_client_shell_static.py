@@ -131,16 +131,24 @@ def test_bridge_action_is_new_session_then_rename_then_send_with_context():
     assert "_actionChain = _actionChain.then(" in js, "clicks are serialised, never deduplicated"
 
 
-def test_reverse_channel_echoes_a_task_update_and_nothing_else():
-    """shell -> dashboard. Reserved until 2026-09-15; its first and only use is
-    telling the page that a "Mark done" click was recorded, so the button can
-    show it. Anything else added here should come with its own test."""
+def test_reverse_channel_carries_exactly_the_two_things_the_page_listens_for():
+    """shell -> dashboard. It has TWO uses, both about a task being closed, and both
+    listened for by literal in `dashboard.html.j2`:
+
+      `task-updated` (2026-09-15) - a `Mark done` click was recorded, show it.
+      `plan-state`   (2026-09-16) - the page just loaded and asked what it missed,
+                                    because it is frozen HTML written on Monday.
+
+    The count is asserted so a third use arrives with its own test rather than
+    riding in on a channel the page silently ignores."""
     js = _read("client-mode.js")
     assert "function postToDashboard(msg)" in js
     assert "frame.contentWindow.postMessage(msg, '*')" in js
     callers = [l for l in js.splitlines() if "postToDashboard(" in l
                and "function postToDashboard" not in l and "window.postToDashboard" not in l]
-    assert len(callers) == 1, callers
+    assert len(callers) == 2, callers
+    assert any("axia.shell.task-updated" in l for l in callers), callers
+    assert any("axia.shell.plan-state" in l for l in callers), callers
     assert "axia.shell.task-updated" in callers[0]
     assert "window.postToDashboard = postToDashboard;" in js
 
@@ -193,6 +201,19 @@ def test_client_mode_js_is_registered_after_panels_js():
 # Structural, like everything else in this file: the markup, the panel wiring and
 # the bridge literals. What the view DOES with the data is covered by
 # tests/test_axia_client_plan.py against the real handlers.
+
+def test_the_shell_answers_a_page_that_asks_what_it_missed():
+    """The page is frozen HTML; it announces itself on load and the shell replies
+    with the closed set. Three links in that chain, each silent if it breaks: the
+    message type the page posts, the endpoint the shell reads, and the type it
+    posts back - which `dashboard.html.j2` listens for by literal."""
+    js = _read("client-mode.js")
+    assert "'axia.dashboard.ready'" in js
+    assert "function sendPlanStateToDashboard" in js
+    assert "'/api/plan/resolved'" in js
+    assert "'axia.shell.plan-state'" in js
+    assert "kind: 'ready'" in js
+
 
 def test_client_mode_js_still_writes_plan_events_after_the_view_was_removed():
     """The Plan VIEW went away on 2026-09-16 (it duplicated the dashboard's

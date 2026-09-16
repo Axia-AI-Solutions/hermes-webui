@@ -80,9 +80,9 @@ ALLOWED: dict[str, frozenset[str]] = {
     "commands": READ,
     # the dashboard tab's own listing
     "client-dashboard": READ,
-    # the plan: GET the derived state, POST one event when a person ticks a box
-    # the plan: one POST, when a person marks a task done on the weekly page
-    "plan": frozenset({"POST"}),
+    # the plan: POST one event when a person marks a task done on the weekly page,
+    # GET the closed set so a reloaded page can re-apply it (/api/plan/resolved only)
+    "plan": frozenset({"GET", "POST"}),
     # the channel connection state the host-side puller writes
     "connections": READ,
 }
@@ -304,6 +304,41 @@ def connections_dir() -> Path:
 # bridge cannot drift into accepting different ids.
 TASK_ID_RE = re.compile(r"^task\.[a-z0-9_.-]{1,120}$")
 TASK_STATUSES = frozenset({"done", "open"})
+
+
+# A task is CLOSED when the data closed it or a person said so. `inferred_done`
+# is deliberately absent: the agent thinking it saw the work is not the person
+# saying so, and the entire plan hangs on that line staying drawn.
+CLOSED_STATUSES = frozenset({"done", "closed_by_data"})
+
+
+def handle_plan_resolved_get(handler, root: Path | None = None) -> bool:
+    """`GET /api/plan/resolved` - which tasks are already closed.
+
+    The published page cannot know this: it is written once a week and frozen, so
+    a task closed on Wednesday still renders its `Mark done` button. Inside the
+    app the page asks for this on load and re-applies what it gets; opened OUTSIDE
+    the app it stays the honest Monday photograph, because there is no shell to ask.
+
+    It answers the closed set and nothing else - not the titles, not the prompts,
+    not the objectives. The page already has every word it renders; what it lacks
+    is one bit per task.
+    """
+    from api.helpers import j
+
+    root = root or plan_dir()
+    try:
+        state = json.loads((root / "plan.state.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return j(handler, {"error": "no plan yet"}, status=404) or True
+    resolved = {}
+    for task in (state.get("tasks") or []):
+        if not isinstance(task, dict):
+            continue
+        tid, status = task.get("id"), task.get("resolved_status")
+        if isinstance(tid, str) and TASK_ID_RE.match(tid) and status in CLOSED_STATUSES:
+            resolved[tid] = status
+    return j(handler, {"week": state.get("week"), "resolved": resolved}) or True
 
 
 def handle_plan_event_post(handler, root: Path | None = None, by: str | None = None) -> bool:
@@ -604,7 +639,8 @@ def _plan_line(plan_state) -> str | None:
     this_week, overdue, inferred = _n("this_week"), _n("overdue"), _n("inferred")
     word = "task" if this_week == 1 else "tasks"
     return (f"Your plan this week: {this_week} {word}, {overdue} overdue, "
-            f"{inferred} I think you did - confirm them in Plan.")
+            f"{inferred} I think you did - they carry a note on the dashboard, "
+            f"confirm them there.")
 
 
 def maybe_announce(root: Path, create_session, bot_name: str = "your agent") -> bool:
