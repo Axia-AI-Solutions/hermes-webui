@@ -9,7 +9,10 @@
 html:not([data-client-mode]) .client-only{display:none !important;}
 
 /* client mode: only Chat and Dashboard survive in the rail and the mobile nav */
-html[data-client-mode] .nav-tab[data-panel]:not([data-panel="chat"]):not([data-panel="clientdash"]){display:none !important;}
+/* Client mode hides every tab but the ones the product has. EVERY panel in
+   panels.js `_ALWAYS_VISIBLE_TABS` must be exempted here or it exists in the
+   markup and is invisible in the app - a test asserts the two lists match. */
+html[data-client-mode] .nav-tab[data-panel]:not([data-panel="chat"]):not([data-panel="clientdash"]):not([data-panel="clientplan"]){display:none !important;}
 html[data-client-mode] .dashboard-link,
 html[data-client-mode] [data-dashboard-link]{display:none !important;}
 

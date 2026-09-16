@@ -277,3 +277,33 @@ def test_every_main_view_is_hidden_by_default_and_has_a_showing_rule():
         if not hidden or not shown:
             missing.append(f"{view}: hidden={bool(hidden)} showing={bool(shown)}")
     assert not missing, "a main-view without both rules is visible under every panel: " + "; ".join(missing)
+
+
+def test_every_always_visible_tab_is_exempt_from_the_client_mode_tab_hide():
+    """Two lists that must agree, and did not, measured 2026-09-15.
+
+    `panels.js` decides which tabs a client may reach (`_ALWAYS_VISIBLE_TABS`);
+    `client-mode.css` hides every `.nav-tab[data-panel]` that is not exempted by a
+    `:not([data-panel="..."])`. The Plan tab was added to the first list and not the
+    second, so the button existed in the markup, passed every structural test, and
+    was `display:none !important` in the app: the rail showed two icons and the
+    operator could not find the page at all.
+
+    Asserting the two lists match is the only version of this that survives the
+    next tab someone adds.
+    """
+    js = _read("panels.js")
+    css = _read("client-mode.css")
+    line = next(l for l in js.splitlines() if "_ALWAYS_VISIBLE_TABS = new Set(" in l)
+    client_list = re.search(r"_CLIENT_MODE\s*\?\s*\[([^\]]*)\]", line).group(1)
+    always = {p.strip().strip("'\"") for p in client_list.split(",") if p.strip()}
+
+    hide = next(l for l in css.splitlines()
+                if "[data-client-mode]" in l and ".nav-tab[data-panel]" in l and "display:none" in l)
+    exempt = set(re.findall(r':not\(\[data-panel="([^"]+)"\]\)', hide))
+
+    assert always, "could not read _ALWAYS_VISIBLE_TABS"
+    missing = always - exempt
+    assert not missing, (
+        f"these tabs are reachable per panels.js but hidden by client-mode.css: {sorted(missing)} "
+        f"(exempt: {sorted(exempt)})")
