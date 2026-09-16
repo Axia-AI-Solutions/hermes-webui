@@ -522,6 +522,9 @@
     head.className = 'plan-head';
     head.textContent = 'Objectives this quarter';
     host.appendChild(head);
+    var grid = document.createElement('div');
+    grid.className = 'plan-grid';
+    host.appendChild(grid);
     (_plan.objectives || []).forEach(function(o){
       var row = document.createElement('div');
       row.className = 'plan-objective';
@@ -553,7 +556,7 @@
       if(o.target && o.target.by) foot.appendChild(_chip('by ' + o.target.by));
       if(o.flag === 'revisit') foot.appendChild(_chip('has not moved in 8 weeks \u00b7 revisit', 'plan-chip-warn'));
       row.appendChild(foot);
-      host.appendChild(row);
+      grid.appendChild(row);
     });
   }
 
@@ -565,8 +568,14 @@
     return (_plan.this_week || []).indexOf(t.id) >= 0;
   }
 
+  var TAB_HEADS = {this_week: 'What to do this week', all_open: 'Everything still open', done: 'Closed'};
+
   function _renderPlanTasks(host){
     host.textContent = '';
+    var head = document.createElement('h3');
+    head.className = 'plan-head';
+    head.textContent = TAB_HEADS[_planTab] || 'Tasks';
+    host.appendChild(head);
     var rows = (_plan.tasks || []).filter(_taskInTab).sort(function(a, b){
       // Overdue first, then the oldest: the list answers "what is late" before
       // "what is new", which is the question a plan is opened to answer.
@@ -581,25 +590,24 @@
       return;
     }
     rows.forEach(function(t){
+      // The same card as a dashboard action: no checkbox, the two buttons stacked
+      // on the right. One surface, one shape - a client should not have to learn
+      // that "the list with the tickboxes" and "the list with the buttons" are the
+      // same five things.
+      var done = t.resolved_status === 'done' || t.resolved_status === 'closed_by_data';
       var row = document.createElement('div');
-      row.className = 'plan-task';
-
-      var box = document.createElement('input');
-      box.type = 'checkbox';
-      box.className = 'plan-check';
-      box.checked = t.resolved_status === 'done' || t.resolved_status === 'closed_by_data';
-      box.disabled = t.resolved_status === 'closed_by_data';   // the data closed it; a click cannot reopen it
-      box.setAttribute('aria-label', t.title || t.id);
-      box.addEventListener('change', function(){
-        postPlanEvent(t.id, box.checked ? 'done' : 'open').then(loadClientPlan);
-      });
-      row.appendChild(box);
+      row.className = 'plan-task' + (done ? ' is-done' : '');
 
       var mid = document.createElement('div');
       mid.className = 'plan-task-body';
       var h = document.createElement('h4');
       h.textContent = t.title || t.id;
       mid.appendChild(h);
+      if(t.prompt && !done){
+        var why = document.createElement('p');
+        why.textContent = t.prompt;
+        mid.appendChild(why);
+      }
       var chips = document.createElement('div');
       chips.className = 'plan-chips';
       if(t.overdue) chips.appendChild(_chip('overdue', 'plan-chip-warn'));
@@ -619,15 +627,32 @@
       mid.appendChild(chips);
       row.appendChild(mid);
 
+      var act = document.createElement('div');
+      act.className = 'plan-act';
+
       var btn = document.createElement('button');
-      btn.className = 'btn plan-cta';
+      btn.className = 'plan-btn primary';
       btn.textContent = t.cta || 'Ask the agent';
       btn.addEventListener('click', function(){
         runDashboardAction(t.prompt || t.title, {
           item_id: t.id, title: t.title, kind: 'task', section: 'plan', week: _plan.week
         });
       });
-      row.appendChild(btn);
+      act.appendChild(btn);
+
+      // `Mark done` is the same button as the dashboard's, and it is ABSENT when the
+      // data closed the task: nothing a person clicks can reopen a measurement.
+      if(t.resolved_status !== 'closed_by_data'){
+        var mark = document.createElement('button');
+        mark.className = 'plan-btn';
+        mark.textContent = done ? 'Done' : 'Mark done';
+        mark.disabled = done;
+        mark.addEventListener('click', function(){
+          postPlanEvent(t.id, 'done').then(loadClientPlan);
+        });
+        act.appendChild(mark);
+      }
+      row.appendChild(act);
       host.appendChild(row);
     });
   }

@@ -307,3 +307,35 @@ def test_every_always_visible_tab_is_exempt_from_the_client_mode_tab_hide():
     assert not missing, (
         f"these tabs are reachable per panels.js but hidden by client-mode.css: {sorted(missing)} "
         f"(exempt: {sorted(exempt)})")
+
+
+def test_the_plan_task_card_is_the_dashboard_action_card():
+    """Operator, 2026-09-15: "misma card que en el dashboard, sin el checkbox".
+
+    The plan and the weekly page show the same five things from two distances, so
+    they use one shape. This pins the parts that made them look like two different
+    products: a checkbox where the dashboard has buttons, and a palette invented
+    here instead of the one the template uses.
+    """
+    js = _read("client-mode.js")
+    css = _read("client-mode.css")
+
+    # no checkbox: the dashboard has none, and two ways to say "done" that look
+    # nothing alike is how a client ends up asking which one counts
+    assert "plan-check" not in js and "plan-check" not in css
+    assert "type = 'checkbox'" not in js
+
+    # the same two buttons, stacked, CTA first
+    assert "plan-btn primary" in js and "'Mark done'" in js
+    assert re.search(r"\.plan-act\{[^}]*flex-direction:column", css), "the buttons must stack"
+
+    # the dashboard's terracotta, copied not approximated (dashboard.html.j2 :root)
+    assert "--plan-terra:#C04421" in css
+    assert re.search(r"\.plan-btn\.primary\{[^}]*background:var\(--plan-terra\)", css)
+
+    # objectives two per row
+    assert re.search(r"\.plan-grid\{[^}]*grid-template-columns:repeat\(2", css)
+
+    # every list says what it is
+    assert "TAB_HEADS" in js and "What to do this week" in js
+    assert "Objectives this quarter" in js
