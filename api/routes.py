@@ -11951,9 +11951,6 @@ def handle_get(handler, parsed) -> bool:
     if parsed.path == "/api/client-dashboard":
         from api.client_mode import handle_dashboard_list as _dash_list
         return _dash_list(handler)
-    if parsed.path == "/api/plan":
-        from api.client_mode import handle_plan_get as _plan_get
-        return _plan_get(handler)
     if parsed.path == "/api/connections":
         from api.client_mode import handle_connections_get as _conn_get
         return _conn_get(handler)

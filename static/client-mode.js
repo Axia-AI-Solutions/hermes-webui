@@ -127,8 +127,7 @@
   function _view(){ return document.documentElement.dataset.clientView || 'chat'; }
 
   function _clientModeOnPanel(name){
-    // The Plan view sits beside the dashboard: same chrome, same drawer behaviour.
-    document.documentElement.dataset.clientView = (name === 'clientdash' || name === 'clientplan') ? 'dashboard' : 'chat';
+    document.documentElement.dataset.clientView = name === 'clientdash' ? 'dashboard' : 'chat';
     _placeChat();
     refreshDrawer();
   }
@@ -365,7 +364,6 @@
     }
     if(r.kind === 'task'){
       postPlanEvent(r.task_id, r.status).then(function(){
-        if(el('mainClientplan')) loadClientPlan();
         postToDashboard({type: 'axia.shell.task-updated', v: 1, task_id: r.task_id, status: r.status});
       });
       return;
@@ -425,7 +423,6 @@
       new MutationObserver(_scheduleRefresh).observe(list, {childList: true, subtree: true});
     }
     window.addEventListener('message', _onWindowMessage);
-    _wirePlanTabs();
     _wireConnectModal();
   }
 
@@ -441,15 +438,12 @@
     else document.documentElement.dataset.clientView = 'dashboard';
   }
 
-  // -- 5. The plan ------------------------------------------------------------
+  // -- 5. Marking a task done ------------------------------------------------
   //
-  // `plan.state.json` is DERIVED by the plan skill's tick; this view renders it and
-  // writes exactly one thing back: a person ticking a box, through POST /api/plan/events.
-  // An inference the agent made shows as "inferred, confirm" and leaves the box unticked:
-  // the shell never turns a guess into a completion.
-
-  var _planTab = 'this_week';
-  var _plan = null;
+  // The Plan VIEW is gone (2026-09-16): it was mostly a copy of the dashboard's
+  // "Recommended actions", and the plan now lives inside the weekly page. What
+  // survives is this: the page's `Mark done` posts one event, attributed to the
+  // session's email by the sidecar.
 
   async function postPlanEvent(taskId, status, note){
     var body = {task_id: taskId, status: status};
@@ -462,214 +456,6 @@
       if(typeof showToast === 'function') showToast('Could not record that. Try again.', 3000);
       return false;
     }
-  }
-
-  async function loadClientPlan(){
-    var empty = el('clientplanEmpty');
-    var objectives = el('clientplanObjectives');
-    var tasks = el('clientplanTasks');
-    if(!objectives || !tasks) return;
-    try{
-      var r = await fetch('api/plan', {credentials: 'same-origin', cache: 'no-store'});
-      if(!r.ok) throw new Error('no plan');
-      _plan = await r.json();
-    }catch(e){
-      _plan = null;
-      if(empty) empty.hidden = false;
-      objectives.textContent = '';
-      tasks.textContent = '';
-      return;
-    }
-    if(empty) empty.hidden = true;
-    var rev = el('clientplanRevision');
-    if(rev) rev.textContent = _planSummary();
-    _renderPlanObjectives(objectives);
-    _renderPlanTasks(tasks);
-  }
-
-  function _chip(text, cls){
-    var s = document.createElement('span');
-    s.className = 'plan-chip' + (cls ? ' ' + cls : '');
-    s.textContent = text;
-    return s;
-  }
-
-  // How far a number has travelled from where it started to where it is going.
-  // null when anything is missing or the baseline already equals the target: a bar
-  // drawn from a guess is worse than no bar.
-  function _progress(o){
-    var base = o.baseline && o.baseline.value;
-    var cur = o.current, tgt = o.target && o.target.value;
-    if(typeof base !== 'number' || typeof cur !== 'number' || typeof tgt !== 'number') return null;
-    if(base === tgt) return null;
-    var pct = (cur - base) / (tgt - base) * 100;
-    return Math.max(0, Math.min(100, Math.round(pct)));
-  }
-
-  function _planSummary(){
-    var c = (_plan && _plan.counts) || {};
-    var n = c.this_week || 0;
-    var bits = [n + (n === 1 ? ' task this week' : ' tasks this week')];
-    if(c.overdue) bits.push(c.overdue + ' overdue');
-    if(c.inferred) bits.push(c.inferred + ' to confirm');
-    if(c.done_this_week) bits.push(c.done_this_week + ' done');
-    return bits.join(' \u00b7 ') + (_plan.revision ? ('  \u00b7  revised ' + _plan.revision) : '');
-  }
-
-  function _renderPlanObjectives(host){
-    host.textContent = '';
-    var head = document.createElement('h3');
-    head.className = 'plan-head';
-    head.textContent = 'Objectives this quarter';
-    host.appendChild(head);
-    var grid = document.createElement('div');
-    grid.className = 'plan-grid';
-    host.appendChild(grid);
-    (_plan.objectives || []).forEach(function(o){
-      var row = document.createElement('div');
-      row.className = 'plan-objective';
-      var h = document.createElement('h4');
-      h.textContent = o.title || o.id;
-      row.appendChild(h);
-
-      var line = document.createElement('p');
-      line.className = 'plan-series';
-      var base = (o.baseline && o.baseline.value !== undefined && o.baseline.value !== null) ? o.baseline.value : '?';
-      var cur = (o.current === null || o.current === undefined || o.current === 'not_measured') ? 'not measured' : o.current;
-      var tgt = (o.target && o.target.value !== undefined) ? o.target.value : '?';
-      line.textContent = 'started at ' + base + '  \u2192  now ' + cur + '  \u2192  target ' + tgt;
-      row.appendChild(line);
-
-      var pct = _progress(o);
-      if(pct !== null){
-        var bar = document.createElement('div');
-        bar.className = 'plan-bar';
-        var fill = document.createElement('span');
-        fill.style.width = pct + '%';
-        bar.appendChild(fill);
-        row.appendChild(bar);
-      }
-
-      var foot = document.createElement('div');
-      foot.className = 'plan-chips';
-      foot.appendChild(_chip(String(o.series || '').replace(/^series\./, 'measured by ')));
-      if(o.target && o.target.by) foot.appendChild(_chip('by ' + o.target.by));
-      if(o.flag === 'revisit') foot.appendChild(_chip('has not moved in 8 weeks \u00b7 revisit', 'plan-chip-warn'));
-      row.appendChild(foot);
-      grid.appendChild(row);
-    });
-  }
-
-  function _taskInTab(t){
-    if(_planTab === 'done') return t.resolved_status === 'done' || t.resolved_status === 'closed_by_data';
-    if(t.resolved_status === 'done' || t.resolved_status === 'closed_by_data') return false;
-    if(t.status === 'retired') return false;
-    if(_planTab === 'all_open') return true;
-    return (_plan.this_week || []).indexOf(t.id) >= 0;
-  }
-
-  var TAB_HEADS = {this_week: 'What to do this week', all_open: 'Everything still open', done: 'Closed'};
-
-  function _renderPlanTasks(host){
-    host.textContent = '';
-    var head = document.createElement('h3');
-    head.className = 'plan-head';
-    head.textContent = TAB_HEADS[_planTab] || 'Tasks';
-    host.appendChild(head);
-    var rows = (_plan.tasks || []).filter(_taskInTab).sort(function(a, b){
-      // Overdue first, then the oldest: the list answers "what is late" before
-      // "what is new", which is the question a plan is opened to answer.
-      if(!!a.overdue !== !!b.overdue) return a.overdue ? -1 : 1;
-      return (b.age_weeks || 0) - (a.age_weeks || 0);
-    });
-    if(!rows.length){
-      var none = document.createElement('p');
-      none.className = 'plan-none';
-      none.textContent = _planTab === 'done' ? 'Nothing closed yet.' : 'Nothing on this list.';
-      host.appendChild(none);
-      return;
-    }
-    rows.forEach(function(t){
-      // The same card as a dashboard action: no checkbox, the two buttons stacked
-      // on the right. One surface, one shape - a client should not have to learn
-      // that "the list with the tickboxes" and "the list with the buttons" are the
-      // same five things.
-      var done = t.resolved_status === 'done' || t.resolved_status === 'closed_by_data';
-      var row = document.createElement('div');
-      row.className = 'plan-task' + (done ? ' is-done' : '');
-
-      var mid = document.createElement('div');
-      mid.className = 'plan-task-body';
-      var h = document.createElement('h4');
-      h.textContent = t.title || t.id;
-      mid.appendChild(h);
-      if(t.prompt && !done){
-        var why = document.createElement('p');
-        why.textContent = t.prompt;
-        mid.appendChild(why);
-      }
-      var chips = document.createElement('div');
-      chips.className = 'plan-chips';
-      if(t.overdue) chips.appendChild(_chip('overdue', 'plan-chip-warn'));
-      if(t.age_weeks >= 1 && t.resolved_status === 'open'){
-        chips.appendChild(_chip('open ' + t.age_weeks + (t.age_weeks === 1 ? ' week' : ' weeks')));
-      }
-      if(t.inferred) chips.appendChild(_chip('inferred, confirm', 'plan-chip-warn'));
-      if(t.resolved_status === 'closed_by_data'){
-        // Say WHICH number closed it. "Done" with no reason is indistinguishable
-        // from someone having ticked it, and these two are not the same claim.
-        chips.appendChild(_chip(t.close_when ? ('closed by the data \u00b7 ' + t.close_when) : 'closed by the data'));
-      }
-      if(t.close_reason && t.resolved_status === 'open' && t.close_reason.indexOf('path_missing') === 0){
-        chips.appendChild(_chip('not measured yet', 'plan-chip-warn'));
-      }
-      if(t.owner) chips.appendChild(_chip(t.owner));
-      mid.appendChild(chips);
-      row.appendChild(mid);
-
-      var act = document.createElement('div');
-      act.className = 'plan-act';
-
-      var btn = document.createElement('button');
-      btn.className = 'plan-btn primary';
-      btn.textContent = t.cta || 'Ask the agent';
-      btn.addEventListener('click', function(){
-        runDashboardAction(t.prompt || t.title, {
-          item_id: t.id, title: t.title, kind: 'task', section: 'plan', week: _plan.week
-        });
-      });
-      act.appendChild(btn);
-
-      // `Mark done` is the same button as the dashboard's, and it is ABSENT when the
-      // data closed the task: nothing a person clicks can reopen a measurement.
-      if(t.resolved_status !== 'closed_by_data'){
-        var mark = document.createElement('button');
-        mark.className = 'plan-btn';
-        mark.textContent = done ? 'Done' : 'Mark done';
-        mark.disabled = done;
-        mark.addEventListener('click', function(){
-          postPlanEvent(t.id, 'done').then(loadClientPlan);
-        });
-        act.appendChild(mark);
-      }
-      row.appendChild(act);
-      host.appendChild(row);
-    });
-  }
-
-  function _wirePlanTabs(){
-    var tabs = el('clientplanTabs');
-    if(!tabs) return;
-    tabs.addEventListener('click', function(ev){
-      var b = ev.target && ev.target.closest ? ev.target.closest('[data-plan-tab]') : null;
-      if(!b) return;
-      _planTab = b.getAttribute('data-plan-tab');
-      Array.prototype.forEach.call(tabs.querySelectorAll('[data-plan-tab]'), function(x){
-        x.classList.toggle('is-active', x === b);
-      });
-      var host = el('clientplanTasks');
-      if(host && _plan) _renderPlanTasks(host);
-    });
   }
 
   // -- 6. Connect: the steps, never the key ------------------------------------
@@ -740,7 +526,7 @@
     done.addEventListener('click', function(){
       modal.hidden = true;
       runDashboardAction('I added ' + email + ' to ' + name + '. Please confirm when you can see it.',
-        {kind: 'cta', title: 'Connect ' + name, section: 'channels', week: (_plan && _plan.week) || ''});
+        {kind: 'cta', title: 'Connect ' + name, section: 'channels', week: document.body.getAttribute('data-week') || ''});
     });
     if(body) body.appendChild(done);
     modal.hidden = false;
@@ -757,7 +543,6 @@
   }
 
   window.loadClientDashboard = loadClientDashboard;
-  window.loadClientPlan = loadClientPlan;
   window.postPlanEvent = postPlanEvent;
   window.openConnectModal = openConnectModal;
   window.openClientDashboardPage = _show;

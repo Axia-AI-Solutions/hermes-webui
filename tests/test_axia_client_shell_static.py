@@ -194,37 +194,16 @@ def test_client_mode_js_is_registered_after_panels_js():
 # the bridge literals. What the view DOES with the data is covered by
 # tests/test_axia_client_plan.py against the real handlers.
 
-def test_plan_view_markup_exists_once():
-    html = _read("index.html")
-    assert html.count('id="mainClientplan"') == 1
-    assert html.count('data-panel="clientplan"') == 2      # the rail and the sidebar nav
-    for needle in ('id="clientplanTabs"', 'id="clientplanObjectives"', 'id="clientplanTasks"',
-                   'id="clientplanEmpty"', 'id="clientplanRevision"'):
-        assert html.count(needle) == 1, needle
-    assert 'No plan yet. It appears after the first Monday run.' in html
-
-
-def test_plan_panel_is_registered_and_always_visible_in_client_mode():
-    js = _read("panels.js")
-    panels = js[js.index("const MAIN_VIEW_PANELS = ["):js.index("const MAIN_VIEW_SIDEBAR_PANEL_FALLBACKS")]
-    assert "'clientplan'" in panels
-    always = next(l for l in js.splitlines() if "_ALWAYS_VISIBLE_TABS = new Set(" in l)
-    assert "'clientplan'" in always
-    assert "if (nextPanel === 'clientplan' && typeof loadClientPlan === 'function') await loadClientPlan();" in js
-    assert "if (panel === 'clientplan') mainText = 'Plan';" in js
-
-
-def test_plan_view_shares_the_dashboard_chrome():
+def test_client_mode_js_still_writes_plan_events_after_the_view_was_removed():
+    """The Plan VIEW went away on 2026-09-16 (it duplicated the dashboard's
+    Recommended actions). The WRITER did not: `Mark done` on the weekly page posts
+    one event through here, and losing it would make that button a no-op that still
+    looks like it worked."""
     js = _read("client-mode.js")
-    fn = js[js.index("function _clientModeOnPanel("):js.index("function _afterMove(")]
-    assert "name === 'clientdash' || name === 'clientplan'" in fn
-
-
-def test_client_mode_js_carries_the_plan_functions_and_endpoint():
-    js = _read("client-mode.js")
-    assert "function loadClientPlan" in js
     assert "function postPlanEvent" in js
     assert "'/api/plan/events'" in js
+    assert "function loadClientPlan" not in js
+    assert "mainClientplan" not in js
 
 
 def test_the_task_bridge_is_named_in_both_directions():
@@ -264,7 +243,7 @@ def test_every_main_view_is_hidden_by_default_and_has_a_showing_rule():
     html = _read("index.html")
     css = _read("style.css") + _read("client-mode.css")
     ids = set(re.findall(r'<div id="(main[A-Z][A-Za-z]*)"[^>]*class="[^"]*\bmain-view\b', html))
-    assert "mainClientplan" in ids and "mainClientdash" in ids, ids
+    assert "mainClientdash" in ids, ids
     missing = []
     for view in sorted(ids):
         if view == "mainChat":
@@ -307,35 +286,3 @@ def test_every_always_visible_tab_is_exempt_from_the_client_mode_tab_hide():
     assert not missing, (
         f"these tabs are reachable per panels.js but hidden by client-mode.css: {sorted(missing)} "
         f"(exempt: {sorted(exempt)})")
-
-
-def test_the_plan_task_card_is_the_dashboard_action_card():
-    """Operator, 2026-09-15: "misma card que en el dashboard, sin el checkbox".
-
-    The plan and the weekly page show the same five things from two distances, so
-    they use one shape. This pins the parts that made them look like two different
-    products: a checkbox where the dashboard has buttons, and a palette invented
-    here instead of the one the template uses.
-    """
-    js = _read("client-mode.js")
-    css = _read("client-mode.css")
-
-    # no checkbox: the dashboard has none, and two ways to say "done" that look
-    # nothing alike is how a client ends up asking which one counts
-    assert "plan-check" not in js and "plan-check" not in css
-    assert "type = 'checkbox'" not in js
-
-    # the same two buttons, stacked, CTA first
-    assert "plan-btn primary" in js and "'Mark done'" in js
-    assert re.search(r"\.plan-act\{[^}]*flex-direction:column", css), "the buttons must stack"
-
-    # the dashboard's terracotta, copied not approximated (dashboard.html.j2 :root)
-    assert "--plan-terra:#C04421" in css
-    assert re.search(r"\.plan-btn\.primary\{[^}]*background:var\(--plan-terra\)", css)
-
-    # objectives two per row
-    assert re.search(r"\.plan-grid\{[^}]*grid-template-columns:repeat\(2", css)
-
-    # every list says what it is
-    assert "TAB_HEADS" in js and "What to do this week" in js
-    assert "Objectives this quarter" in js

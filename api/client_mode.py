@@ -81,7 +81,8 @@ ALLOWED: dict[str, frozenset[str]] = {
     # the dashboard tab's own listing
     "client-dashboard": READ,
     # the plan: GET the derived state, POST one event when a person ticks a box
-    "plan": frozenset({"GET", "POST"}),
+    # the plan: one POST, when a person marks a task done on the weekly page
+    "plan": frozenset({"POST"}),
     # the channel connection state the host-side puller writes
     "connections": READ,
 }
@@ -303,19 +304,6 @@ def connections_dir() -> Path:
 # bridge cannot drift into accepting different ids.
 TASK_ID_RE = re.compile(r"^task\.[a-z0-9_.-]{1,120}$")
 TASK_STATUSES = frozenset({"done", "open"})
-
-
-def handle_plan_get(handler, root: Path | None = None) -> bool:
-    """`GET /api/plan` — the derived state, or 404 before the first tick."""
-    from api.helpers import j
-
-    root = root or plan_dir()
-    state = root / "plan.state.json"
-    try:
-        data = json.loads(state.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return j(handler, {"error": "no plan yet"}, status=404) or True
-    return j(handler, data) or True
 
 
 def handle_plan_event_post(handler, root: Path | None = None, by: str | None = None) -> bool:

@@ -136,18 +136,6 @@ def plan(tmp_path):
     return d
 
 
-def test_plan_get_returns_state(plan):
-    h = FakeHandler("GET")
-    cm.handle_plan_get(h, plan)
-    assert h.body_json() == STATE
-
-
-def test_plan_get_404_without_state(tmp_path):
-    h = FakeHandler("GET")
-    cm.handle_plan_get(h, tmp_path / "nothing")
-    assert h.status == 404 and h.body_json() == {"error": "no plan yet"}
-
-
 def _post(plan, payload, by="brandi@potomac.edu"):
     body = json.dumps(payload).encode("utf-8")
     h = FakeHandler("POST", body=body)
@@ -192,10 +180,14 @@ def test_plan_event_post_without_a_session_is_attributed_to_client(plan):
     assert e["by"] == "client"
 
 
-def test_plan_family_allows_get_post_not_delete():
+def test_plan_family_is_post_only():
+    """`GET /api/plan` served the Plan view and went with it. A live endpoint with
+    no consumer is surface area on a client-facing box, so the family narrowed
+    rather than kept a door nobody walks through."""
     assert cm.client_mode_allows("POST", "/api/plan/events") is True
-    assert cm.client_mode_allows("GET", "/api/plan") is True
+    assert cm.client_mode_allows("GET", "/api/plan") is False
     assert cm.client_mode_allows("DELETE", "/api/plan/events") is False
+    assert not hasattr(cm, "handle_plan_get")
 
 
 # ── 3. one pattern, two sides ───────────────────────────────────────────────
@@ -314,31 +306,15 @@ def test_maybe_announce_reads_the_plan_state_fail_soft(tmp_path, monkeypatch):
 
 
 # ── 7. the live file, not a hand-made one ───────────────────────────────────
-def test_the_live_plan_state_serves_and_carries_what_the_view_renders():
-    """`tests/fixtures/plan_state_live.json` is the real `plan.state.json` off
-    marketing-potomac (week 2026-09-07). A fixture I wrote proves the handler; this
-    proves the CONTRACT against the file the box actually produced.
-    """
-    live = json.loads((REPO / "tests" / "fixtures" / "plan_state_live.json").read_text(encoding="utf-8"))
-    h = FakeHandler("GET")
-    d = tmp = None
-    import tempfile
-    with tempfile.TemporaryDirectory() as tmp:
-        root = Path(tmp)
-        (root / "plan.state.json").write_text(json.dumps(live), encoding="utf-8")
-        cm.handle_plan_get(h, root)
-    body = h.body_json()
-    assert body == live
 
-    # every field the Plan view reads must be there, or the page renders blanks
-    assert body["counts"]["this_week"] >= 1
-    for o in body["objectives"]:
-        assert o["title"] and str(o["series"]).startswith("series.")
-        assert "baseline" in o and "target" in o and "current" in o
-    for t in body["tasks"]:
-        assert t["id"].startswith("task.")
-        assert t["title"] and t["owner"]
-        assert t["resolved_status"] in ("open", "done", "closed_by_data")
-        assert "age_weeks" in t and "overdue" in t
-    assert any(t.get("cta") for t in body["tasks"]), "no task carries a CTA label"
-    assert body["this_week"], "the live plan has nothing on this week"
+
+def test_the_announcement_reads_the_live_plan_state():
+    """`tests/fixtures/plan_state_live.json` is the real file off marketing-potomac.
+    The weekly announcement is the one thing in this process that still reads it, so
+    the contract is pinned here: the counts it needs, present and numeric."""
+    live = json.loads((REPO / "tests" / "fixtures" / "plan_state_live.json").read_text(encoding="utf-8"))
+    counts = live["counts"]
+    for k in ("this_week", "overdue", "inferred"):
+        assert isinstance(counts[k], int), k
+    _, text = cm.compose_announcement(DASH, "Marketing Agent", live)
+    assert f"Your plan this week: {counts['this_week']} task" in text

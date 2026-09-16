@@ -12,7 +12,7 @@ html:not([data-client-mode]) .client-only{display:none !important;}
 /* Client mode hides every tab but the ones the product has. EVERY panel in
    panels.js `_ALWAYS_VISIBLE_TABS` must be exempted here or it exists in the
    markup and is invisible in the app - a test asserts the two lists match. */
-html[data-client-mode] .nav-tab[data-panel]:not([data-panel="chat"]):not([data-panel="clientdash"]):not([data-panel="clientplan"]){display:none !important;}
+html[data-client-mode] .nav-tab[data-panel]:not([data-panel="chat"]):not([data-panel="clientdash"]){display:none !important;}
 html[data-client-mode] .dashboard-link,
 html[data-client-mode] [data-dashboard-link]{display:none !important;}
 
@@ -115,58 +115,6 @@ html[data-client-mode]:not([data-client-view="dashboard"]) #agentDrawer{display:
   .agent-drawer-tab-name{writing-mode:horizontal-tb;transform:none;max-height:none;}
   .clientdash-weekselect{max-width:150px;}
 }
-
-/* The three things style.css says a new view needs: the div (index.html), hidden by
-   default, and a showing-<name> rule. Without these two lines #mainClientplan
-   inherits .main-view{display:flex} and hangs below the active panel forever. */
-#mainClientplan{display:none;}
-main.main.showing-clientplan > #mainChat{display:none !important;}
-main.main.showing-clientplan > #mainClientplan{display:flex;}
-
-/* ── The Plan view ───────────────────────────────────────────────────────────
-   It wears the dashboard's clothes on purpose: the same card, the same two
-   buttons, the same terracotta. The plan and the weekly page are the same five
-   things seen from two distances, and a client should not have to learn two
-   visual languages to work that out. The palette below is copied from the
-   dashboard template's `:root` rather than approximated. */
-[data-client-mode]{--plan-terra:#C04421;--plan-ala:#F2EDE3;--plan-ala100:#FAF7F1;
-  --plan-line:rgba(10,22,40,.12);--plan-line2:rgba(10,22,40,.22);--plan-ink:#0A1628;--plan-ink2:#3B4A68;}
-[data-client-mode] .clientplan-revision{font-size:11px;color:var(--muted);margin-left:10px;}
-[data-client-mode] .clientplan-tabs{display:flex;gap:4px;}
-[data-client-mode] .clientplan-tab{border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:8px;padding:5px 10px;font:inherit;font-size:12px;cursor:pointer;}
-[data-client-mode] .clientplan-tab.is-active{border-color:var(--accent,var(--text));color:var(--text);background:var(--surface,var(--code-bg));}
-[data-client-mode] .clientplan-body{overflow-y:auto;padding:20px 24px 40px;display:flex;flex-direction:column;gap:26px;}
-[data-client-mode] .clientplan-empty{color:var(--muted);font-size:13px;}
-[data-client-mode] .clientplan-section{display:flex;flex-direction:column;gap:10px;}
-
-[data-client-mode] .plan-head{margin:0;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
-
-/* objectives: two per row, one on a narrow window */
-[data-client-mode] .plan-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
-@media (max-width:900px){[data-client-mode] .plan-grid{grid-template-columns:1fr;}}
-[data-client-mode] .plan-objective{border:1px solid var(--plan-line);border-radius:8px;padding:16px 18px;background:var(--plan-ala100);box-shadow:0 1px 2px rgba(10,22,40,.04);min-width:0;}
-[data-client-mode] .plan-objective h4{margin:0 0 6px;font-size:15px;font-weight:600;line-height:1.35;color:var(--plan-ink);}
-[data-client-mode] .plan-series{margin:0;font-size:13px;color:var(--plan-ink2);font-variant-numeric:tabular-nums;}
-[data-client-mode] .plan-bar{height:4px;border-radius:2px;background:var(--plan-line);margin:10px 0;overflow:hidden;}
-[data-client-mode] .plan-bar span{display:block;height:100%;background:var(--plan-terra);}
-
-/* a task is the dashboard's action card */
-[data-client-mode] .plan-task{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;border:1px solid var(--plan-line);border-radius:8px;padding:16px 18px;background:var(--plan-ala100);box-shadow:0 1px 2px rgba(10,22,40,.04);}
-[data-client-mode] .plan-task.is-done{opacity:.6;}
-[data-client-mode] .plan-task-body{min-width:0;}
-[data-client-mode] .plan-task h4{margin:0 0 4px;font-size:15px;font-weight:600;line-height:1.35;color:var(--plan-ink);}
-[data-client-mode] .plan-task p{margin:0 0 8px;font-size:13px;color:var(--plan-ink2);}
-[data-client-mode] .plan-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
-[data-client-mode] .plan-chip{font:600 11px/1 var(--font-sans,inherit);letter-spacing:.06em;padding:5px 9px;border-radius:999px;white-space:nowrap;border:1px solid var(--plan-line2);color:var(--plan-ink2);}
-[data-client-mode] .plan-chip-warn{background:var(--plan-terra);border-color:var(--plan-terra);color:var(--plan-ala);}
-
-/* the dashboard's buttons, stacked, CTA first */
-[data-client-mode] .plan-act{display:flex;flex-direction:column;align-items:stretch;gap:8px;flex:0 0 auto;}
-[data-client-mode] .plan-btn{font:600 12px var(--font-sans,inherit);letter-spacing:.02em;border-radius:4px;padding:8px 12px;cursor:pointer;border:1px solid var(--plan-line2);background:transparent;color:var(--plan-ink);white-space:nowrap;}
-[data-client-mode] .plan-btn.primary{background:var(--plan-terra);border-color:var(--plan-terra);color:var(--plan-ala);}
-[data-client-mode] .plan-btn:hover:not(:disabled){border-color:var(--plan-ink);}
-[data-client-mode] .plan-btn:disabled{opacity:.5;cursor:default;}
-[data-client-mode] .plan-none{color:var(--muted);font-size:13px;margin:0;}
 
 /* ── Connect modal ───────────────────────────────────────────────────────── */
 [data-client-mode] .connect-modal{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;background:rgba(10,22,40,.45);padding:20px;}
