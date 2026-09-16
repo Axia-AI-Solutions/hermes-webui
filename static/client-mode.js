@@ -482,7 +482,7 @@
     }
     if(empty) empty.hidden = true;
     var rev = el('clientplanRevision');
-    if(rev) rev.textContent = _plan.revision ? ('Revised ' + _plan.revision) : '';
+    if(rev) rev.textContent = _planSummary();
     _renderPlanObjectives(objectives);
     _renderPlanTasks(tasks);
   }
@@ -494,22 +494,65 @@
     return s;
   }
 
+  // How far a number has travelled from where it started to where it is going.
+  // null when anything is missing or the baseline already equals the target: a bar
+  // drawn from a guess is worse than no bar.
+  function _progress(o){
+    var base = o.baseline && o.baseline.value;
+    var cur = o.current, tgt = o.target && o.target.value;
+    if(typeof base !== 'number' || typeof cur !== 'number' || typeof tgt !== 'number') return null;
+    if(base === tgt) return null;
+    var pct = (cur - base) / (tgt - base) * 100;
+    return Math.max(0, Math.min(100, Math.round(pct)));
+  }
+
+  function _planSummary(){
+    var c = (_plan && _plan.counts) || {};
+    var n = c.this_week || 0;
+    var bits = [n + (n === 1 ? ' task this week' : ' tasks this week')];
+    if(c.overdue) bits.push(c.overdue + ' overdue');
+    if(c.inferred) bits.push(c.inferred + ' to confirm');
+    if(c.done_this_week) bits.push(c.done_this_week + ' done');
+    return bits.join(' \u00b7 ') + (_plan.revision ? ('  \u00b7  revised ' + _plan.revision) : '');
+  }
+
   function _renderPlanObjectives(host){
     host.textContent = '';
+    var head = document.createElement('h3');
+    head.className = 'plan-head';
+    head.textContent = 'Objectives this quarter';
+    host.appendChild(head);
     (_plan.objectives || []).forEach(function(o){
       var row = document.createElement('div');
       row.className = 'plan-objective';
       var h = document.createElement('h4');
       h.textContent = o.title || o.id;
       row.appendChild(h);
+
       var line = document.createElement('p');
       line.className = 'plan-series';
       var base = (o.baseline && o.baseline.value !== undefined && o.baseline.value !== null) ? o.baseline.value : '?';
-      var cur = (o.current === null || o.current === undefined) ? 'not measured' : o.current;
+      var cur = (o.current === null || o.current === undefined || o.current === 'not_measured') ? 'not measured' : o.current;
       var tgt = (o.target && o.target.value !== undefined) ? o.target.value : '?';
-      line.textContent = String(o.series || '') + ': ' + base + ' -> ' + cur + ' -> ' + tgt;
+      line.textContent = 'started at ' + base + '  \u2192  now ' + cur + '  \u2192  target ' + tgt;
       row.appendChild(line);
-      if(o.flag === 'revisit') row.appendChild(_chip('revisit', 'plan-chip-warn'));
+
+      var pct = _progress(o);
+      if(pct !== null){
+        var bar = document.createElement('div');
+        bar.className = 'plan-bar';
+        var fill = document.createElement('span');
+        fill.style.width = pct + '%';
+        bar.appendChild(fill);
+        row.appendChild(bar);
+      }
+
+      var foot = document.createElement('div');
+      foot.className = 'plan-chips';
+      foot.appendChild(_chip(String(o.series || '').replace(/^series\./, 'measured by ')));
+      if(o.target && o.target.by) foot.appendChild(_chip('by ' + o.target.by));
+      if(o.flag === 'revisit') foot.appendChild(_chip('has not moved in 8 weeks \u00b7 revisit', 'plan-chip-warn'));
+      row.appendChild(foot);
       host.appendChild(row);
     });
   }
@@ -524,7 +567,12 @@
 
   function _renderPlanTasks(host){
     host.textContent = '';
-    var rows = (_plan.tasks || []).filter(_taskInTab);
+    var rows = (_plan.tasks || []).filter(_taskInTab).sort(function(a, b){
+      // Overdue first, then the oldest: the list answers "what is late" before
+      // "what is new", which is the question a plan is opened to answer.
+      if(!!a.overdue !== !!b.overdue) return a.overdue ? -1 : 1;
+      return (b.age_weeks || 0) - (a.age_weeks || 0);
+    });
     if(!rows.length){
       var none = document.createElement('p');
       none.className = 'plan-none';
@@ -559,7 +607,14 @@
         chips.appendChild(_chip('open ' + t.age_weeks + (t.age_weeks === 1 ? ' week' : ' weeks')));
       }
       if(t.inferred) chips.appendChild(_chip('inferred, confirm', 'plan-chip-warn'));
-      if(t.resolved_status === 'closed_by_data') chips.appendChild(_chip('closed by the data'));
+      if(t.resolved_status === 'closed_by_data'){
+        // Say WHICH number closed it. "Done" with no reason is indistinguishable
+        // from someone having ticked it, and these two are not the same claim.
+        chips.appendChild(_chip(t.close_when ? ('closed by the data \u00b7 ' + t.close_when) : 'closed by the data'));
+      }
+      if(t.close_reason && t.resolved_status === 'open' && t.close_reason.indexOf('path_missing') === 0){
+        chips.appendChild(_chip('not measured yet', 'plan-chip-warn'));
+      }
       if(t.owner) chips.appendChild(_chip(t.owner));
       mid.appendChild(chips);
       row.appendChild(mid);

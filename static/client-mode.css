@@ -113,6 +113,13 @@ html[data-client-mode]:not([data-client-view="dashboard"]) #agentDrawer{display:
   .clientdash-weekselect{max-width:150px;}
 }
 
+/* The three things style.css says a new view needs: the div (index.html), hidden by
+   default, and a showing-<name> rule. Without these two lines #mainClientplan
+   inherits .main-view{display:flex} and hangs below the active panel forever. */
+#mainClientplan{display:none;}
+main.main.showing-clientplan > #mainChat{display:none !important;}
+main.main.showing-clientplan > #mainClientplan{display:flex;}
+
 /* ── The Plan view ───────────────────────────────────────────────────────────
    Rendered from api/plan. Everything here is inside [data-client-mode]: an
    internal box never loads these rules, and never has the markup either. */
@@ -149,3 +156,7 @@ html[data-client-mode]:not([data-client-view="dashboard"]) #agentDrawer{display:
 [data-client-mode] .connect-modal-body li{margin-bottom:4px;}
 [data-client-mode] .connect-email{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
 [data-client-mode] .connect-email code{flex:1;min-width:0;overflow-x:auto;font-size:12px;background:var(--surface,var(--code-bg));border:1px solid var(--border);border-radius:6px;padding:6px 8px;}
+[data-client-mode] .plan-head{margin:0 0 2px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);}
+[data-client-mode] .plan-bar{height:4px;border-radius:2px;background:var(--border);margin:8px 0 10px;overflow:hidden;}
+[data-client-mode] .plan-bar span{display:block;height:100%;background:var(--accent,var(--text));}
+[data-client-mode] .plan-objective .plan-series{margin-bottom:2px;}

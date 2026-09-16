@@ -1,0 +1,234 @@
+{
+  "v": 1,
+  "week": "2026-09-07",
+  "generated_at": "2026-09-15T22:39:24Z",
+  "revision": "2026-09-07",
+  "objectives": [
+    {
+      "id": "obj.response_rate",
+      "title": "Answer every negative review within a week",
+      "series": "series.response_rate",
+      "baseline": {
+        "week": "2026-09-07",
+        "value": 74.51
+      },
+      "target": {
+        "value": 90,
+        "by": "2026-09-30"
+      },
+      "history": [
+        {
+          "week": "2026-09-07",
+          "value": 74.51
+        }
+      ],
+      "current": 74.51,
+      "flag": null
+    },
+    {
+      "id": "obj.brand_search",
+      "title": "Own page one of your brand search",
+      "series": "series.brand_owned_top10",
+      "baseline": {
+        "week": "2026-09-07",
+        "value": 2
+      },
+      "target": {
+        "value": 9,
+        "by": "2026-09-30"
+      },
+      "history": [
+        {
+          "week": "2026-09-07",
+          "value": 2
+        }
+      ],
+      "current": 2,
+      "flag": null
+    },
+    {
+      "id": "obj.risk_flags",
+      "title": "No fraud or confuser pages under the school's name",
+      "series": "series.spam_flags",
+      "baseline": {
+        "week": "2026-09-07",
+        "value": 1
+      },
+      "target": {
+        "value": 0,
+        "by": "2026-09-30"
+      },
+      "history": [
+        {
+          "week": "2026-09-07",
+          "value": 1
+        }
+      ],
+      "current": 1,
+      "flag": null
+    },
+    {
+      "id": "obj.community",
+      "title": "Answer the questions the community asks",
+      "series": "series.subreddit_top_share",
+      "baseline": {
+        "week": "2026-09-07",
+        "value": 0.5
+      },
+      "target": {
+        "value": 0.5,
+        "by": "2026-09-30"
+      },
+      "history": [
+        {
+          "week": "2026-09-07",
+          "value": 0.5
+        }
+      ],
+      "current": 0.5,
+      "flag": null
+    },
+    {
+      "id": "obj.earned_press",
+      "title": "One earned press placement per quarter",
+      "series": "series.earned_press_90d",
+      "baseline": {
+        "week": "2026-09-07",
+        "value": 0
+      },
+      "target": {
+        "value": 1,
+        "by": "2026-09-30"
+      },
+      "history": [
+        {
+          "week": "2026-09-07",
+          "value": 0
+        }
+      ],
+      "current": 0,
+      "flag": null
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task.rule.reply_negatives",
+      "initiative": "ini.reply_negatives",
+      "title": "Reply to the 8 negative Google reviews that have no owner response",
+      "owner": "Brandi",
+      "cadence": "once",
+      "due_week": "2026-09-07",
+      "source": {
+        "rule": "reply_negatives",
+        "first_seen": "2026-09-07"
+      },
+      "close_when": "series.unanswered_negatives == 0",
+      "cta": "Draft the replies",
+      "prompt": "Draft replies to the unanswered negative Google reviews, newest first. Under 120 words each, factual, no promises about outcomes.",
+      "status": "open",
+      "resolved_status": "open",
+      "inferred": null,
+      "close_reason": null,
+      "age_weeks": 0,
+      "overdue": false
+    },
+    {
+      "id": "task.rule.gbp_weekly_post",
+      "initiative": "ini.gbp_weekly_post",
+      "title": "Post weekly on the Google Business Profile and ask new students to review using the full school name",
+      "owner": "Brandi",
+      "cadence": "weekly",
+      "due_week": "2026-09-07",
+      "source": {
+        "rule": "gbp_weekly_post",
+        "first_seen": "2026-09-07"
+      },
+      "close_when": null,
+      "cta": "Write this week's post",
+      "prompt": "Give me a four-week Google Business Profile posting plan for University of the Potomac and a review-request message that uses the full school name.",
+      "status": "open",
+      "resolved_status": "open",
+      "inferred": null,
+      "close_reason": "no_close_when",
+      "age_weeks": 0,
+      "overdue": false
+    },
+    {
+      "id": "task.rule.report_spam_page",
+      "initiative": "ini.report_spam_page",
+      "title": "Report the fake-diploma page to Google and to the host",
+      "owner": "Brandi",
+      "cadence": "once",
+      "due_week": "2026-09-07",
+      "source": {
+        "rule": "report_spam_page",
+        "first_seen": "2026-09-07"
+      },
+      "close_when": "series.spam_flags == 0",
+      "cta": "Draft the takedown",
+      "prompt": "Draft a takedown and spam report for the fake-diploma page that uses the University of the Potomac name, addressed to Google and to the hosting provider.",
+      "status": "open",
+      "resolved_status": "open",
+      "inferred": null,
+      "close_reason": null,
+      "age_weeks": 0,
+      "overdue": false
+    },
+    {
+      "id": "task.rule.subreddit_faq",
+      "initiative": "ini.subreddit_faq",
+      "title": "Decide whether the school answers in r/Day1CPTuniversities, and publish one FAQ page that answers what those threads ask",
+      "owner": "Brandi",
+      "cadence": "once",
+      "due_week": "2026-09-07",
+      "source": {
+        "rule": "subreddit_faq",
+        "first_seen": "2026-09-07"
+      },
+      "close_when": null,
+      "cta": "Outline the FAQ page",
+      "prompt": "Summarise the questions students ask about University of the Potomac in r/Day1CPTuniversities and draft the outline of an FAQ page that answers them accurately.",
+      "status": "open",
+      "resolved_status": "open",
+      "inferred": null,
+      "close_reason": "no_close_when",
+      "age_weeks": 0,
+      "overdue": false
+    },
+    {
+      "id": "task.rule.press_pitch",
+      "initiative": "ini.press_pitch",
+      "title": "Pitch one story to a local or trade outlet",
+      "owner": "Brandi",
+      "cadence": "once",
+      "due_week": "2026-09-07",
+      "source": {
+        "rule": "press_pitch",
+        "first_seen": "2026-09-07"
+      },
+      "close_when": "series.earned_press_90d >= 1",
+      "cta": "Find three angles",
+      "prompt": "Propose three story angles about University of the Potomac for local DC and Virginia outlets or higher-ed trade press, based on what the school already does.",
+      "status": "open",
+      "resolved_status": "open",
+      "inferred": null,
+      "close_reason": null,
+      "age_weeks": 0,
+      "overdue": false
+    }
+  ],
+  "this_week": [
+    "task.rule.reply_negatives",
+    "task.rule.gbp_weekly_post",
+    "task.rule.report_spam_page",
+    "task.rule.subreddit_faq",
+    "task.rule.press_pitch"
+  ],
+  "counts": {
+    "this_week": 5,
+    "overdue": 0,
+    "inferred": 0,
+    "done_this_week": 0
+  },
+  "skipped_events": 0
+}

@@ -311,3 +311,34 @@ def test_maybe_announce_reads_the_plan_state_fail_soft(tmp_path, monkeypatch):
     (dash / "latest.html").write_text("<html>new</html>", encoding="utf-8")
     assert cm.maybe_announce(dash, lambda t, x: seen.append((t, x)) or "sid") is True
     assert "Your plan this week: 2 tasks" in seen[1][1]
+
+
+# ── 7. the live file, not a hand-made one ───────────────────────────────────
+def test_the_live_plan_state_serves_and_carries_what_the_view_renders():
+    """`tests/fixtures/plan_state_live.json` is the real `plan.state.json` off
+    marketing-potomac (week 2026-09-07). A fixture I wrote proves the handler; this
+    proves the CONTRACT against the file the box actually produced.
+    """
+    live = json.loads((REPO / "tests" / "fixtures" / "plan_state_live.json").read_text(encoding="utf-8"))
+    h = FakeHandler("GET")
+    d = tmp = None
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        (root / "plan.state.json").write_text(json.dumps(live), encoding="utf-8")
+        cm.handle_plan_get(h, root)
+    body = h.body_json()
+    assert body == live
+
+    # every field the Plan view reads must be there, or the page renders blanks
+    assert body["counts"]["this_week"] >= 1
+    for o in body["objectives"]:
+        assert o["title"] and str(o["series"]).startswith("series.")
+        assert "baseline" in o and "target" in o and "current" in o
+    for t in body["tasks"]:
+        assert t["id"].startswith("task.")
+        assert t["title"] and t["owner"]
+        assert t["resolved_status"] in ("open", "done", "closed_by_data")
+        assert "age_weeks" in t and "overdue" in t
+    assert any(t.get("cta") for t in body["tasks"]), "no task carries a CTA label"
+    assert body["this_week"], "the live plan has nothing on this week"

@@ -248,3 +248,32 @@ def test_the_shell_never_writes_an_inferred_status():
     js = _read("client-mode.js")
     assert "inferred_done" not in js and "inferred_not_started" not in js
     assert "var TASK_STATUSES = {done: 1, open: 1};" in js
+
+
+def test_every_main_view_is_hidden_by_default_and_has_a_showing_rule():
+    """The defect this catches, measured 2026-09-15: `#mainClientplan` shipped with
+    the div and NEITHER display rule, so it inherited `.main-view{display:flex}`,
+    hung below whatever panel was active, and rendered empty because the loader only
+    runs on a panel switch. It looked like an empty tab; it was a missing rule.
+
+    `style.css` states the contract in a comment ("a #main<Name> sibling with
+    class=main-view, inclusion in the hidden-by-default list, and a
+    main.main.showing-<name> > #main<Name> { display:flex } rule"); this asserts it
+    for every view in the tree instead of trusting the next person to read it.
+    """
+    html = _read("index.html")
+    css = _read("style.css") + _read("client-mode.css")
+    ids = set(re.findall(r'<div id="(main[A-Z][A-Za-z]*)"[^>]*class="[^"]*\bmain-view\b', html))
+    assert "mainClientplan" in ids and "mainClientdash" in ids, ids
+    missing = []
+    for view in sorted(ids):
+        if view == "mainChat":
+            continue                      # chat is the default; it has the :not() chain instead
+        panel = view[len("main"):].lower()
+        hidden = (f"#{view}{{display:none;}}" in css.replace(" ", "")
+                  or re.search(rf"main\.main\s*>\s*#{view}\s*\{{display:none", css)
+                  or re.search(rf"#{view},", css) or re.search(rf"\n\s*#{view}\b[^{{]*\{{display:none", css))
+        shown = re.search(rf"showing-{panel}\s*>\s*#{view}\s*\{{display:flex", css)
+        if not hidden or not shown:
+            missing.append(f"{view}: hidden={bool(hidden)} showing={bool(shown)}")
+    assert not missing, "a main-view without both rules is visible under every panel: " + "; ".join(missing)
