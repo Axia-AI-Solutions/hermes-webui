@@ -80,10 +80,12 @@ class HttpRunnerClient:
         return self._post(f"/v1/runs/{urllib.parse.quote(str(run_id), safe='')}/cancel", {})
 
     def respond_approval(self, run_id: str, approval_id: str, choice: str) -> dict[str, Any]:
-        return self._post(
-            f"/v1/runs/{urllib.parse.quote(str(run_id), safe='')}/approval",
-            {"choice": choice, "approval_id": approval_id},
-        )
+        # Gateways that never stamp an id on approval.request (the run itself is
+        # the key; the gateway resolves its oldest pending approval) get no id.
+        body = {"choice": choice}
+        if approval_id:
+            body["approval_id"] = approval_id
+        return self._post(f"/v1/runs/{urllib.parse.quote(str(run_id), safe='')}/approval", body)
 
     def respond_clarify(self, run_id: str, clarify_id: str, response: str) -> dict[str, Any]:
         return self._post(
