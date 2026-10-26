@@ -41,7 +41,7 @@ def test_respond_approval_body_includes_approval_id():
     client._post = fake_post
     client.respond_approval("run-1", "appr-2", "deny")
 
-    assert captured["body"] == {"choice": "deny", "approval_id": "appr-2"}
+    assert captured["body"] == {"choice": "deny", "approval_id": "appr-2", "request_id": "appr-2"}
 
 
 # ---------------------------------------------------------------------------
