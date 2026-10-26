@@ -23832,8 +23832,6 @@ def _handle_approval_respond(handler, body):
             if not _run_id and approval_id:
                 _run_id = _gateway_mirrored_pending_run_id(sid, approval_id)
         if _run_id:
-            if not approval_id:
-                return bad(handler, "approval_id is required for gateway approvals")
             from api.runner_client import HttpRunnerClient, RunnerClientError
             _cfg = _get_config()
             _base = _gateway_base_url(_cfg)

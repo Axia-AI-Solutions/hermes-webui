@@ -580,6 +580,36 @@ def test_gateway_approval_response_relay():
     _STREAM_RUN_IDS.pop("sid-relay", None)
 
 
+def test_gateway_approval_response_relay_without_approval_id():
+    """A gateway that emits no approval id must still be answerable: relay by run, omit the id."""
+    from api.gateway_chat import _STREAM_RUN_IDS
+
+    _STREAM_RUN_IDS["sid-noid"] = "run-noid"
+    mock_session = MagicMock()
+    mock_session.active_stream_id = "sid-noid"
+    captured = {}
+
+    def fake_request_json(self, req):
+        captured["url"] = req.full_url
+        captured["body"] = json.loads(req.data)
+        return {"ok": True}
+
+    handler = MagicMock()
+    handler.wfile = io.BytesIO()
+
+    with patch("api.routes.get_session", return_value=mock_session), \
+         patch("api.runner_client.HttpRunnerClient._request_json", new=fake_request_json), \
+         patch("api.gateway_chat._gateway_base_url", return_value="http://gw:8642"), \
+         patch("api.gateway_chat._gateway_api_key", return_value=""):
+        from api.routes import _handle_approval_respond
+        _handle_approval_respond(handler, {"session_id": "sess-noid", "choice": "deny", "approval_id": ""})
+
+    assert captured["url"] == "http://gw:8642/v1/runs/run-noid/approval"
+    assert captured["body"] == {"choice": "deny"}
+    handler.send_response.assert_called_with(200)
+    _STREAM_RUN_IDS.pop("sid-noid", None)
+
+
 def test_gateway_approval_response_relay_failure_returns_502():
     """Gateway relay failures must surface as HTTP errors to the frontend."""
     from api.gateway_chat import _STREAM_RUN_IDS
