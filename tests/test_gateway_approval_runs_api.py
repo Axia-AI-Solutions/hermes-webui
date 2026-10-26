@@ -573,7 +573,7 @@ def test_gateway_approval_response_relay():
         _handle_approval_respond(handler, body)
 
     assert captured.get("url", "") == "http://gw:8642/v1/runs/run%20abc%2F1/approval"
-    assert captured["body"] == {"choice": "once", "approval_id": "appr x/y"}
+    assert captured["body"] == {"choice": "once", "approval_id": "appr x/y", "request_id": "appr x/y"}
     handler.send_response.assert_called_with(200)
 
     # Cleanup.
@@ -608,6 +608,45 @@ def test_gateway_approval_response_relay_without_approval_id():
     assert captured["body"] == {"choice": "deny"}
     handler.send_response.assert_called_with(200)
     _STREAM_RUN_IDS.pop("sid-noid", None)
+
+
+def test_gateway_approval_event_uses_request_id_as_approval_id():
+    """The runs API stamps request_id on approval.request; the card must carry it."""
+    from api.gateway_chat import _gateway_runs_approval_event
+
+    ev = _gateway_runs_approval_event({
+        "run_id": "run-1", "request_id": "req-42", "command": "rm -rf x",
+        "description": "dangerous", "choices": ["once", "deny"],
+    })
+    assert ev["approval_id"] == "req-42"
+
+
+def test_gateway_approval_response_relay_sends_request_id():
+    """With an id, the relay must target that exact approval via request_id."""
+    from api.gateway_chat import _STREAM_RUN_IDS
+
+    _STREAM_RUN_IDS["sid-reqid"] = "run-reqid"
+    mock_session = MagicMock()
+    mock_session.active_stream_id = "sid-reqid"
+    captured = {}
+
+    def fake_request_json(self, req):
+        captured["body"] = json.loads(req.data)
+        return {"ok": True}
+
+    handler = MagicMock()
+    handler.wfile = io.BytesIO()
+
+    with patch("api.routes.get_session", return_value=mock_session), \
+         patch("api.runner_client.HttpRunnerClient._request_json", new=fake_request_json), \
+         patch("api.gateway_chat._gateway_base_url", return_value="http://gw:8642"), \
+         patch("api.gateway_chat._gateway_api_key", return_value=""):
+        from api.routes import _handle_approval_respond
+        _handle_approval_respond(handler, {"session_id": "sess-reqid", "choice": "once", "approval_id": "req-42"})
+
+    assert captured["body"]["request_id"] == "req-42"
+    assert captured["body"]["choice"] == "once"
+    _STREAM_RUN_IDS.pop("sid-reqid", None)
 
 
 def test_gateway_approval_response_relay_failure_returns_502():

@@ -335,7 +335,7 @@ def _gateway_runs_approval_event(payload: dict) -> dict | None:
     pattern_key = str(payload.get("pattern_key") or "").strip()
     args = payload.get("args") if isinstance(payload.get("args"), (list, dict)) else []
     run_id = str(payload.get("run_id") or "").strip()
-    approval_id = str(payload.get("approval_id") or payload.get("id") or "").strip()
+    approval_id = str(payload.get("approval_id") or payload.get("request_id") or payload.get("id") or "").strip()
     risk = str(payload.get("risk_level") or "high").strip()
     choices = payload.get("choices") if isinstance(payload.get("choices"), list) else []
     allow_permanent = payload.get("allow_permanent")
