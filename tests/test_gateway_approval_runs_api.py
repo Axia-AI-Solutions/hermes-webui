@@ -834,3 +834,96 @@ def test_gateway_chat_completions_path_unchanged():
     assert not apperrors, f"No apperror expected for a normal response, got: {apperrors}"
     tokens = [e for e in events if isinstance(e, tuple) and e[0] == "token"]
     assert tokens, "Expected at least one token event"
+
+
+def _run_runs_api_with_events(stream_id, sse_lines):
+    from api.config import STREAM_PARTIAL_TEXT, STREAM_REASONING_TEXT
+    from api.gateway_chat import _STREAM_RUN_IDS, _run_gateway_runs_api_streaming
+
+    events = []
+    STREAM_PARTIAL_TEXT[stream_id] = ""
+    STREAM_REASONING_TEXT[stream_id] = ""
+
+    class _JsonResponse:
+        def read(self, _limit=None):
+            return json.dumps({"run_id": "run-final"}).encode("utf-8")
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return None
+
+    class _SseResponse:
+        def __iter__(self):
+            return iter(sse_lines)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return None
+
+    def fake_urlopen(req, *, timeout=None):
+        return _JsonResponse() if req.full_url.endswith("/v1/runs") else _SseResponse()
+
+    try:
+        with patch("urllib.request.urlopen", side_effect=fake_urlopen):
+            final_text, _usage = _run_gateway_runs_api_streaming(
+                session_id="sess-final", msg_text="hi", model="m", workspace="/tmp",
+                stream_id=stream_id, base_url="http://gw:8642", api_key="k",
+                prefill_messages=[], body_extras={},
+                put_gateway_event=lambda event, data: events.append((event, data)),
+                cancel_event=threading.Event(),
+            )
+        partial = STREAM_PARTIAL_TEXT[stream_id]
+    finally:
+        STREAM_PARTIAL_TEXT.pop(stream_id, None)
+        STREAM_REASONING_TEXT.pop(stream_id, None)
+        _STREAM_RUN_IDS.pop(stream_id, None)
+    return final_text, events, partial
+
+
+def _sse(payload):
+    return [f"data: {json.dumps(payload)}\n".encode("utf-8"), b"\n"]
+
+
+def test_gateway_runs_api_persists_only_the_final_response_not_the_narration():
+    """Progress notes between tool calls stream live but are not the answer."""
+    lines = (
+        _sse({"event": "message.delta", "delta": "I'll read the skill first."})
+        + _sse({"event": "tool.started", "tool": "read_file", "toolCallId": "t1"})
+        + _sse({"event": "tool.completed", "tool": "read_file", "toolCallId": "t1"})
+        + _sse({"event": "message.delta", "delta": "\n\n"})
+        + _sse({"event": "message.delta", "delta": "Done. The skill is at 2.4.0."})
+        + _sse({"event": "assistant.completed", "content": "Done. The skill is at 2.4.0."})
+        + _sse({"event": "run.completed", "messages": []})
+    )
+    final_text, events, partial = _run_runs_api_with_events("sid-final-only", lines)
+
+    assert final_text == "Done. The skill is at 2.4.0."
+    # The narration still streamed live, so the activity rows can carry it.
+    tokens = "".join(d["text"] for e, d in events if e == "token")
+    assert tokens.startswith("I'll read the skill first.")
+    assert partial.startswith("I'll read the skill first.")
+
+
+def test_gateway_runs_api_keeps_streamed_text_when_final_response_does_not_match():
+    """A rewritten final (e.g. media turned into data URLs) must not drop text."""
+    lines = (
+        _sse({"event": "message.delta", "delta": "Here is the chart: MEDIA:/tmp/c.png"})
+        + _sse({"event": "assistant.completed", "content": "Here is the chart: data:image/png;base64,AAAA"})
+        + _sse({"event": "run.completed", "messages": []})
+    )
+    final_text, _events, _partial = _run_runs_api_with_events("sid-final-mismatch", lines)
+    assert final_text == "Here is the chart: MEDIA:/tmp/c.png"
+
+
+def test_gateway_runs_api_without_assistant_completed_keeps_streamed_text():
+    lines = (
+        _sse({"event": "message.delta", "delta": "Note. "})
+        + _sse({"event": "message.delta", "delta": "Answer."})
+        + _sse({"event": "run.completed", "messages": []})
+    )
+    final_text, _events, _partial = _run_runs_api_with_events("sid-final-absent", lines)
+    assert final_text == "Note. Answer."
