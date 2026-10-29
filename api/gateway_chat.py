@@ -528,6 +528,10 @@ def _run_gateway_runs_api_streaming(
                 if payload.get("error"):
                     raise RuntimeError(str(payload["error"]))
                 output = str(payload.get("output") or "")
+                # The runs API names the final response `output` (gateway v0.21
+                # sends no assistant.completed on this stream — measured).
+                if output and completed_content is None:
+                    completed_content = output
                 if output and not final_text:
                     final_text = output
                     if stream_id in STREAM_PARTIAL_TEXT:
@@ -560,11 +564,12 @@ def _final_reply_from_stream(streamed_text: str, completed_content: str | None) 
 
     ``message.delta`` streams EVERY assistant segment of the turn, including the
     progress notes the agent writes between tool calls, so the concatenation is
-    narration + answer. The gateway's ``assistant.completed`` carries only the
-    final response. Persist that when it is the tail of what was streamed; the
-    narration is already in the activity rows built from the live tokens.
-    Anything that does not line up (media rewritten to data URLs, an old
-    gateway that never sends the event) keeps the full streamed text.
+    narration + answer. The gateway names the final response alone (the runs
+    API's ``run.completed.output``, or ``assistant.completed.content``). Persist
+    that when it is the tail of what was streamed; the narration is already in
+    the activity rows built from the live tokens. Anything that does not line
+    up (media rewritten to data URLs, no final response sent) keeps the full
+    streamed text.
     """
     final = (completed_content or "").strip()
     if not final:
