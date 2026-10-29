@@ -896,8 +896,7 @@ def test_gateway_runs_api_persists_only_the_final_response_not_the_narration():
         + _sse({"event": "tool.completed", "tool": "read_file", "toolCallId": "t1"})
         + _sse({"event": "message.delta", "delta": "\n\n"})
         + _sse({"event": "message.delta", "delta": "Done. The skill is at 2.4.0."})
-        + _sse({"event": "assistant.completed", "content": "Done. The skill is at 2.4.0."})
-        + _sse({"event": "run.completed", "messages": []})
+        + _sse({"event": "run.completed", "output": "Done. The skill is at 2.4.0."})
     )
     final_text, events, partial = _run_runs_api_with_events("sid-final-only", lines)
 
@@ -908,22 +907,33 @@ def test_gateway_runs_api_persists_only_the_final_response_not_the_narration():
     assert partial.startswith("I'll read the skill first.")
 
 
+def test_gateway_runs_api_also_honours_assistant_completed():
+    """A gateway that names the final response on assistant.completed."""
+    lines = (
+        _sse({"event": "message.delta", "delta": "Checking.\n\n"})
+        + _sse({"event": "message.delta", "delta": "Answer."})
+        + _sse({"event": "assistant.completed", "content": "Answer."})
+        + _sse({"event": "run.completed"})
+    )
+    final_text, _events, _partial = _run_runs_api_with_events("sid-final-ac", lines)
+    assert final_text == "Answer."
+
+
 def test_gateway_runs_api_keeps_streamed_text_when_final_response_does_not_match():
     """A rewritten final (e.g. media turned into data URLs) must not drop text."""
     lines = (
         _sse({"event": "message.delta", "delta": "Here is the chart: MEDIA:/tmp/c.png"})
-        + _sse({"event": "assistant.completed", "content": "Here is the chart: data:image/png;base64,AAAA"})
-        + _sse({"event": "run.completed", "messages": []})
+        + _sse({"event": "run.completed", "output": "Here is the chart: data:image/png;base64,AAAA"})
     )
     final_text, _events, _partial = _run_runs_api_with_events("sid-final-mismatch", lines)
     assert final_text == "Here is the chart: MEDIA:/tmp/c.png"
 
 
-def test_gateway_runs_api_without_assistant_completed_keeps_streamed_text():
+def test_gateway_runs_api_without_a_final_response_keeps_streamed_text():
     lines = (
         _sse({"event": "message.delta", "delta": "Note. "})
         + _sse({"event": "message.delta", "delta": "Answer."})
-        + _sse({"event": "run.completed", "messages": []})
+        + _sse({"event": "run.completed"})
     )
     final_text, _events, _partial = _run_runs_api_with_events("sid-final-absent", lines)
     assert final_text == "Note. Answer."
