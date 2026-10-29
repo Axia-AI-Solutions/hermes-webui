@@ -910,9 +910,7 @@ def test_gateway_runs_api_persists_only_the_final_response_not_the_narration():
 def test_gateway_runs_api_also_honours_assistant_completed():
     """A gateway that names the final response on assistant.completed."""
     lines = (
-        _sse({"event": "message.delta", "delta": "Checking.
-
-"})
+        _sse({"event": "message.delta", "delta": "Checking.\n\n"})
         + _sse({"event": "message.delta", "delta": "Answer."})
         + _sse({"event": "assistant.completed", "content": "Answer."})
         + _sse({"event": "run.completed"})
