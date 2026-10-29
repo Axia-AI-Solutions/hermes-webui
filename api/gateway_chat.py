@@ -446,6 +446,7 @@ def _run_gateway_runs_api_streaming(
     headers_sse["Accept"] = "text/event-stream"
     req_events = urllib.request.Request(url_events, headers=headers_sse, method="GET")
     final_text = ""
+    completed_content = None
     usage: dict = {}
     sse_event = "message"
     with urllib.request.urlopen(req_events, timeout=_gateway_read_timeout_secs()) as resp:
@@ -517,6 +518,12 @@ def _run_gateway_runs_api_streaming(
                     put_gateway_event("token", {"text": delta})
                 sse_event = "message"
                 continue
+            if payload_event == "assistant.completed":
+                content = payload.get("content")
+                if isinstance(content, str):
+                    completed_content = content
+                sse_event = "message"
+                continue
             if payload_event == "run.completed":
                 if payload.get("error"):
                     raise RuntimeError(str(payload["error"]))
@@ -545,7 +552,26 @@ def _run_gateway_runs_api_streaming(
                     STREAM_PARTIAL_TEXT[stream_id] += delta
                 put_gateway_event("token", {"text": delta})
             usage.update({k: v for k, v in _gateway_stream_usage(payload).items() if v})
-    return final_text, usage
+    return _final_reply_from_stream(final_text, completed_content), usage
+
+
+def _final_reply_from_stream(streamed_text: str, completed_content: str | None) -> str:
+    """The text to persist as the turn's answer.
+
+    ``message.delta`` streams EVERY assistant segment of the turn, including the
+    progress notes the agent writes between tool calls, so the concatenation is
+    narration + answer. The gateway's ``assistant.completed`` carries only the
+    final response. Persist that when it is the tail of what was streamed; the
+    narration is already in the activity rows built from the live tokens.
+    Anything that does not line up (media rewritten to data URLs, an old
+    gateway that never sends the event) keeps the full streamed text.
+    """
+    final = (completed_content or "").strip()
+    if not final:
+        return streamed_text
+    if streamed_text.rstrip().endswith(final):
+        return final
+    return streamed_text
 
 
 def _settle_gateway_terminal_error(session_id, stream_id, workspace, model, model_provider, terminal_error):
